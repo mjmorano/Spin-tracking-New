@@ -6,7 +6,8 @@
             "includePath": [
                 "/usr/include",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include"
+                "${workspaceFolder}/include",
+                "/usr/local/cuda-12/include"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
