@@ -51,7 +51,7 @@ INC_DIR = include
 EXE = run_test
 
 # Object files:
-OBJS = $(OBJ_DIR)/test.o $(OBJ_DIR)/dop853.o $(OBJ_DIR)/DOP853_test.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/test.o $(OBJ_DIR)/DOP853_test.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 
