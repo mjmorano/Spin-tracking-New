@@ -5,7 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include "include/test.cuh"
-#include "include/DOP853_test.h"
+#include "include/DOP853.h"
 #include "include/particle.h"
 #include "include/options.h"
 

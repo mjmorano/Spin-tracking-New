@@ -4,7 +4,7 @@
 #include <random>
 #include <math.h>
 #include <algorithm>
-#include "DOP853_test.h"
+#include "DOP853.h"
 #include "options.h"
 
 typedef void (*GRAD)(const std::vector<double> pos, std::vector<double>& G);
