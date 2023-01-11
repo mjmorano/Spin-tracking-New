@@ -5,7 +5,7 @@ Outputs the sign of a number.
 */
 
 template <typename T>
-int particle::sgn(T val) {
+double particle::sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }
 
@@ -14,13 +14,21 @@ Calculates the timestep based on the next wall or gas collision.
 */
 
 void particle::calc_next_collision_time() {
-	dx = sgn(v[0]) * Lx / 2 - pos[0];
-	dy = sgn(v[1]) * Ly / 2 - pos[1];
-	dz = sgn(v[2]) * Lz / 2 - pos[2];
+	dx = sgn(v[0]) * Lx / 2.0 - pos[0];
+	dy = sgn(v[1]) * Ly / 2.0 - pos[1];
+	dz = sgn(v[2]) * Lz / 2.0 - pos[2];
 	dtx = dx / v[0];
 	dty = dy / v[1];
 	dtz = dz / v[2];
-	tbounce = std::min({ dtx, dty, dtz });
+
+	if (dtx < 1e-16)
+		dtx = 1e6;
+	else if (dty < 1e-16)
+		dty = 1e6;
+	else if (dtz < 1e-16)
+		dtz = 1e6;
+
+	tbounce = std::min( {dtx, dty, dtz} );
 
 	if (t + tbounce < next_gas_coll_time && t + tbounce < tf) {
 		dt = tbounce;
@@ -43,12 +51,6 @@ void particle::calc_next_collision_time() {
 		dt = tf - t;
 		finished = true;
 	}
-
-	//if (dt < 0) {
-	//	bad = true;
-	//	finished = true;
-	//	printf("%f", dt);
-	//}
 }
 
 /*
@@ -61,11 +63,11 @@ void particle::new_velocities() {
 
 	if (coll_type == 'W' && diffuse == false) {
 		if (wall_hit == 'x')
-			v[0] *= -1;
+			v[0] *= -1.0;
 		else if (wall_hit == 'y')
-			v[1] *= -1;
+			v[1] *= -1.0;
 		else if (wall_hit == 'z')
-			v[2] *= -1;
+			v[2] *= -1.0;
 	}
 	else if (coll_type == 'W' && diffuse == true) {
 
@@ -114,34 +116,13 @@ Moves the particle based on the particle velocity and calcuated timestep.
 */
 
 void particle::move() {
-    // printf("%f\t %f\t %f\t %f\n", t, pos[0], pos[1], pos[2]);
+	printf("%f\t %f\t %f\t %f\n",t,pos[0],pos[1],pos[2]);
 	t_old = t;
 	t += dt;
 	pos_old = pos;
-
-	if(coll_type == 'W'){
-		if (wall_hit == 'x') {
-			pos[0] = sgn(v[0]) * Lx/2;
-			pos[1] += v[1] * dt;
-			pos[2] += v[2] * dt;
-		}
-		else if (wall_hit == 'y') {
-			pos[0] += v[0] * dt;
-			pos[1] = sgn(v[1]) * Ly/2;
-			pos[2] += v[2] * dt;
-		}
-		else if (wall_hit == 'z') {
-			pos[0] += v[0] * dt;
-			pos[1] += v[1] * dt;
-			pos[2] = sgn(v[2]) * Lz/2;
-		}
-	}
-	else if(coll_type == 'G'){
-		pos[0] += v[0] * dt;
-		pos[1] += v[1] * dt;
-		pos[2] += v[2] * dt;
-	}
-
+	pos[0] += v[0] * dt;
+	pos[1] += v[1] * dt;
+	pos[2] += v[2] * dt;
 }
 /*
 Performs one particle and spin integration step.
@@ -152,7 +133,7 @@ void particle::step() {
 	calc_next_collision_time();
 	move();
 	new_velocities();
-	integrate_step();
+	// integrate_step();
 
 	n_steps += 1;
 }
