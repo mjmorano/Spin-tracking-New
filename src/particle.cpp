@@ -118,12 +118,31 @@ void particle::move() {
 	t_old = t;
 	t += dt;
 	pos_old = pos;
-	pos[0] += v[0] * dt;
-	pos[1] += v[1] * dt;
-	pos[2] += v[2] * dt;
+
+	if(coll_type == 'W'){
+		if (wall_hit == 'x') {
+			pos[0] = sgn(v[0]) * Lx/2;
+			pos[1] += v[1] * dt;
+			pos[2] += v[2] * dt;
+		}
+		else if (wall_hit == 'y') {
+			pos[0] += v[0] * dt;
+			pos[1] = sgn(v[1]) * Ly/2;
+			pos[2] += v[2] * dt;
+		}
+		else if (wall_hit == 'z') {
+			pos[0] += v[0] * dt;
+			pos[1] += v[1] * dt;
+			pos[2] = sgn(v[2]) * Lz/2;
+		}
+	}
+	else if(coll_type == 'G'){
+		pos[0] += v[0] * dt;
+		pos[1] += v[1] * dt;
+		pos[2] += v[2] * dt;
+	}
 
 }
-
 /*
 Performs one particle and spin integration step.
 */
