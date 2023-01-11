@@ -80,7 +80,7 @@ public:
 
 	void integrate_spin();
 
-	void Bloch(double t, std::vector<double>& y, std::vector<double>& f);
+	void Bloch(const double t, const std::vector<double>& y, std::vector<double>& f);
 
 private:
 

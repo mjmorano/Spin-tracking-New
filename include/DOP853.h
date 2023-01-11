@@ -32,10 +32,7 @@ Springer Series in Computational Mathematics, Springer-Verlag (1993).
 #include <vector>
 #include <iostream>
 
-
-// typedef void (*FCN)(const double x, const std::vector<double> y, std::vector<double>& f);
 typedef void (*OBS)(long nr, double xold, double x, std::vector<double>& y, unsigned int n, int* irtrn);
-// using std::function<void(double x, std::vector<double>& y, std::vector<double>& f)> FCN;
 
 class DOP853
 {
@@ -43,7 +40,7 @@ public:
 
     DOP853() {}
 
-    DOP853(std::function<void(double x, std::vector<double>& y, std::vector<double>& f)> fcn, std::vector<double> y0, OBS obs, options OPT)
+    DOP853(std::function<void(const double x, const std::vector<double>& y, std::vector<double>& f)> fcn, std::vector<double> y0, OBS obs, options OPT)
     : n(3), y(y0), fcn(fcn), rtol(OPT.rtol), atol(OPT.atol), obs(obs), iout(OPT.iout), uround(OPT.uround), safe(OPT.safe), 
       fac1(OPT.fac1), fac2(OPT.fac2), beta(OPT.beta), hmax(OPT.hmax), h(OPT.h), nmax(OPT.nmax), c(coeffs()), yy1(n), k1(n), k2(n), k3(n), k4(n), k5(n), k6(n), k7(n), k8(n), 
       k9(n), k10(n), rcont1(n), rcont2(n), rcont3(n), rcont4(n), rcont5(n), rcont6(n), rcont7(n), rcont8(n) 
@@ -59,13 +56,13 @@ public:
 
     double max_d(double a, double b);
 
-    double hinit(std::function<void(double x, std::vector<double>& y, std::vector<double>& f)> fcn, double x, std::vector<double>& y,
+    double hinit(std::function<void(const double x, const std::vector<double>& y, std::vector<double>& f)> fcn, double x, std::vector<double>& y,
       double posneg, std::vector<double>& f0, std::vector<double>& f1, std::vector<double>& yy1, int iord,
       double hmax, double atoler, double rtoler);
 
 private:
     unsigned int n;
-    std::function<void(double x, std::vector<double>& y, std::vector<double>& f)> fcn;
+    std::function<void(const double x, const std::vector<double>& y, std::vector<double>& f)> fcn;
     std::vector<double> y;
     double x;
     double xend;
