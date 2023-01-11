@@ -164,7 +164,7 @@ void particle::integrate_spin(){
 	integrator.integrate(t0,tf);
 }
 
-void particle::Bloch(double x, std::vector<double>& y, std::vector<double>& f){
+void particle::Bloch(const double x, const std::vector<double>& y, std::vector<double>& f){
 	interpolate(x,p_interp,v_interp);
 	Bx = pulse(x);
 	grad(p_interp,G);
