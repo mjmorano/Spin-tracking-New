@@ -38,6 +38,7 @@ int main() {
 	options opt;
     opt.iout = 1;
     opt.gas_coll = false;
+    opt.rtol = 1e-14;
     opt.t0 = 0.0;
     opt.tf = 1.0;
     opt.B0 = 3e-6;
