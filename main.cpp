@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <iomanip>
+#include <openacc.h>
 #include "include/test.cuh"
 #include "include/DOP853.h"
 #include "include/particle.h"
@@ -38,7 +39,7 @@ int main() {
     opt.iout = 1;
     opt.gas_coll = false;
     opt.t0 = 0.0;
-    opt.tf = 200.0;
+    opt.tf = 1.0;
     opt.B0 = 3e-6;
     particle p(pulse, grad, solout, yi, opt);
     p.run();

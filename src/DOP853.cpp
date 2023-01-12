@@ -18,7 +18,7 @@ double DOP853::max_d(double a, double b)
   return (a > b)?a:b;
 }
 
-double DOP853::hinit(std::function<void(double x, std::vector<double>& y, std::vector<double>& f)> fcn, double x, std::vector<double>& y,
+double DOP853::hinit(std::function<void(const double x, const std::vector<double>& y, std::vector<double>& f)> fcn, double x, std::vector<double>& y,
 	    double posneg, std::vector<double>& f0, std::vector<double>& f1, std::vector<double>& yy1, int iord,
 	    double hmax, double atoler, double rtoler)
 {
