@@ -5,7 +5,7 @@ Outputs the sign of a number.
 */
 
 template <typename T>
-int particle::sgn(T val) {
+double particle::sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }
 

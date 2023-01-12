@@ -35,8 +35,8 @@ int main() {
     outfile.open("/mnt/c/Users/moran/Desktop/dressing.txt");
     std::vector<double> yi = {1.0, 0.0, 0.0};
 	options opt;
-    opt.iout = 0;
-    opt.gas_coll = true;
+    opt.iout = 1;
+    opt.gas_coll = false;
     opt.t0 = 0.0;
     opt.tf = 200.0;
     opt.B0 = 3e-6;
