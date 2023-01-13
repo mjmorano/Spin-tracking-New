@@ -64,7 +64,7 @@ public:
 
 	void calc_next_collision_time();
 
-	template <typename T> int sgn(T val);
+	template <typename T> double sgn(T val);
 
 	void new_velocities();
 
