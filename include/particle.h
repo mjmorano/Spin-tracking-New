@@ -96,8 +96,8 @@ private:
     std::uniform_real_distribution<double> inity;
     std::uniform_real_distribution<double> initz;
     std::exponential_distribution<double> gen_coll_time;
-    std::uniform_real_distribution<double> gen_norm;
-    std::uniform_real_distribution<double> gen_max_boltz;
+    std::normal_distribution<double> gen_norm;
+    std::normal_distribution<double> gen_max_boltz;
     std::uniform_real_distribution<double> uni_0_1;
     std::uniform_real_distribution<double> uni_0_2pi;
 	double y = 0;
