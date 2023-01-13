@@ -48,7 +48,7 @@ INC_DIR = include
 ## Make variables ##
 
 # Target executable name:
-EXE = run_test
+EXE = run
 
 # Object files:
 OBJS = $(OBJ_DIR)/test.o $(OBJ_DIR)/DOP853.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
