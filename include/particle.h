@@ -69,17 +69,17 @@ public:
 	}
 
 	~particle() {};
-
+	#pragma acc routine seq
 	void calc_next_collision_time();
-
+	#pragma acc routine seq
 	template <typename T> double sgn(T val);
-
+	#pragma acc routine seq
 	void new_velocities();
-
+	#pragma acc routine seq
 	void move();
-
+	#pragma acc routine seq
 	void step();
-
+	#pragma acc routine seq
 	void run();
 
 private:

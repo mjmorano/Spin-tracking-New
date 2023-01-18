@@ -26,13 +26,12 @@ int main() {
 	
 	size_t outputSize = numOutput * sizeof(float)*4; //4 because timestamp + spin vector
 	int numParticles = 1000;
+	float * outputArray = (float*)malloc(outputSize*numParticles);
 	
 	#pragma acc parallel loop
 	for(int n = 0; n<numParticles;n++){
-			
-		float * outputArray = (float*)malloc(outputSize);
 		
-		particle p(yi, opt, outputArray);
+		particle p(yi, opt, &outputArray[n*outputSize]);
 		p.run();
 		
 		//#pragma serial
