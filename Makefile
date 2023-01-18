@@ -26,7 +26,7 @@ INC_DIR = include
 EXE = run
 
 # Object files:
-OBJS = $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/desprng.o $(OBJ_DIR)/des.o $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 
@@ -42,6 +42,9 @@ $(OBJ_DIR)/%.o : %.cpp
 
 # Compile C++ source files to object files:
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp include/%.h
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
 # Clean objects in object directory.

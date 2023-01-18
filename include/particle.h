@@ -1,10 +1,10 @@
 #pragma once
-#include <random>
 #include <math.h>
 #include <algorithm>
 #include <openacc.h>
 #include "DOP853func.h"
 #include "options.h"
+#include "dists.h"
 
 // typedef void (*GRAD)(const double* pos, double* G);
 
@@ -23,46 +23,45 @@ public:
 	unsigned int lastIndex = 0;
 	float *outputArray;
 	
-	particle(double3 y0, options OPT, float* storage) :
+	particle(double3 y0, options OPT, desprng_individual_t* thread_data, desprng_common_t* process_data, unsigned int ipart, unsigned long* nident, float* storage) :
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
-		gen(rd()), diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
-		Temp(OPT.T), gravity(OPT.gravity), pos(),
+		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
+		Temp(OPT.T), gravity(OPT.gravity), pos(), temp(OPT.T),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
-		gamma(OPT.gamma), G(), opt(OPT),
-		initx(-OPT.Lx/2,OPT.Lx/2), inity(-OPT.Ly/2,OPT.Ly/2), initz(-OPT.Lz/2,OPT.Lz/2), 
-		gen_coll_time(1/OPT.tc), gen_max_boltz(0.0,sqrt(k * OPT.T / OPT.m)), gen_norm(0.0,1.0), 
-		uni_0_1(0.0,1.0), uni_0_2pi(0.0,2*M_PI)
-		// integrator(std::bind(&particle::Bloch,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3), y0, obs, OPT)
+		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data)
 	{	
+
+		create_identifier(nident);
+		initialize_individual(process_data, thread_data + ipart, nident[0]);
 		S = y0;
 		outputArray = storage;
-		pos.x = initx(gen);
-		pos.y = inity(gen);
-		pos.z = initz(gen);
+		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
+		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
+		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
 		pos_old = pos;
         t = t0;
 
 		if (gas_coll == true)
-			next_gas_coll_time = gen_coll_time(gen);
+			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);
 		else
 			next_gas_coll_time = tf + 1.0;
 
 		if (dist == 'C') {
 
 			double3 vec;
-			vec.x = gen_norm(gen);
-			vec.y = gen_norm(gen);
-			vec.z = gen_norm(gen);
+			vec.x = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+			vec.y = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+			vec.z = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
 
 			double vec_norm = len(vec);
 			v = V_init * vec/vec_norm;
 			Vel = len(v);
 		}
 		else if (dist == 'M') {
-			v.x = gen_max_boltz(gen);
-			v.y = gen_max_boltz(gen);
-			v.z = gen_max_boltz(gen);
+			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
+			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
+			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
 			Vel = len(v);
 		}
 		v_old = v;
@@ -83,20 +82,12 @@ public:
 	void run();
 
 private:
+	desprng_individual_t* thread_data; 
+	desprng_common_t* process_data;
 	options opt;
 	const bool diffuse;
 	const bool gas_coll;
 	const bool gravity;
-	std::random_device rd;
-    std::mt19937 gen;
-    std::uniform_real_distribution<double> initx;
-    std::uniform_real_distribution<double> inity;
-    std::uniform_real_distribution<double> initz;
-    std::exponential_distribution<double> gen_coll_time;
-    std::normal_distribution<double> gen_norm;
-    std::normal_distribution<double> gen_max_boltz;
-    std::uniform_real_distribution<double> uni_0_1;
-    std::uniform_real_distribution<double> uni_0_2pi;
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
@@ -110,6 +101,7 @@ private:
 	double3 p_interp;
 	double3 v_interp;
 	double3 G;
+	double temp;
 	double V_init;
 	double Vel = 0.0;
 	const double Lx;
@@ -138,4 +130,7 @@ private:
 	double Bz;
 	double B0;
 	double gamma;
+	unsigned int ipart;
+	unsigned int icount = 0;
+	unsigned long iprn;
 };

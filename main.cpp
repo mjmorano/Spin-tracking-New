@@ -2,6 +2,7 @@
 #include <chrono>
 #include "include/particle.h"
 #include "include/options.h"
+#include "include/dists.h"
 #include <openacc.h>
 
 using namespace std;
@@ -25,13 +26,21 @@ int main() {
 	printf("numOutput = %d\n", numOutput);
 	
 	size_t outputSize = numOutput * sizeof(float)*4; //4 because timestamp + spin vector
-	int numParticles = 1000;
+	int numParticles = 1;
 	float * outputArray = (float*)malloc(outputSize*numParticles);
-	
+
+
+	unsigned long* nident = (unsigned long*)alloca(8 * numParticles);
+	desprng_common_t *process_data;
+    desprng_individual_t *thread_data;
+    thread_data = (desprng_individual_t*)alloca(sizeof(desprng_individual_t) * numParticles);
+    process_data = (desprng_common_t*)alloca(sizeof(desprng_common_t));
+	initialize_common(process_data);
+
 	#pragma acc parallel loop
 	for(int n = 0; n<numParticles;n++){
 		
-		particle p(yi, opt, &outputArray[n*outputSize]);
+		particle p(yi, opt, thread_data, process_data, n, &nident[n], &outputArray[n*outputSize]);
 		p.run();
 		
 		//#pragma serial
