@@ -1,48 +1,31 @@
 #include <iostream>
-#include <math.h>
-#include <fstream>
 #include <chrono>
-#include <vector>
-#include <iomanip>
-#include <openacc.h>
-#include "include/test.cuh"
-#include "include/DOP853.h"
 #include "include/particle.h"
 #include "include/options.h"
-
-std::ofstream outfile;
+#include <openacc.h>
 
 using namespace std;
 using namespace std::chrono;
 
-double pulse(double t){
-    // return 64.7775066e-6*cos(10000*t);
-    return 0.0;
-}
-
-void grad(const vector<double> pos, vector<double>&G){
-    G[0] = 0.0;
-    G[1] = 0.0;
-    G[2] = 0.0;
-}
-
-void solout(long nr, double xold, double x, std::vector<double>& y, unsigned int n, int* irtrn){
-    outfile << setprecision(16);
-    outfile << x << "\t" << y[0] << "\t" << y[1] << "\t" << y[2] << "\n";
-}
+ofstream outfile;
 
 int main() {
 
-    outfile.open("/mnt/c/Users/moran/Desktop/dressing.txt");
-    std::vector<double> yi = {1.0, 0.0, 0.0};
+    auto start = high_resolution_clock::now();
+    double yi[3] = {1.0, 0.0, 0.0};
 	options opt;
-    opt.iout = 1;
+    opt.iout = 0;
+    opt.diffuse = false;
     opt.gas_coll = false;
     opt.t0 = 0.0;
     opt.tf = 1.0;
+    opt.h = 0.0001;
     opt.B0 = 3e-6;
-    particle p(pulse, grad, solout, yi, opt);
+
+    particle p(yi, opt);
     p.run();
-    
-    outfile.close();
+
+    auto end = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(end - start);
+	cout << "Execution Time: " << duration.count() << " ms\n";
 }

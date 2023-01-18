@@ -59,7 +59,9 @@ Calculates the new velocities after a wall or gas collision.
 
 void particle::new_velocities() {
 
-	v_old = v;
+	v_old[0] = v[0];
+	v_old[1] = v[1];
+	v_old[2] = v[2];
 
 	if (coll_type == 'W' && diffuse == false) {
 		if (wall_hit == 'x')
@@ -82,7 +84,7 @@ void particle::new_velocities() {
 		}
 		else if (wall_hit == 'y') {
 			v[0] = Vel * sin(phi) * cos(theta);
-			v[1] = -1 * sgn(v[2]) * Vel * cos(phi);
+			v[1] = -1 * sgn(v[1]) * Vel * cos(phi);
 			v[2] = Vel * sin(phi) * sin(theta);
 		}
 		else if (wall_hit == 'z') {
@@ -116,14 +118,17 @@ Moves the particle based on the particle velocity and calcuated timestep.
 */
 
 void particle::move() {
-	printf("%f\t %f\t %f\t %f\n",t,pos[0],pos[1],pos[2]);
+	// printf("%f\t %f\t %f\t %f\n",t,pos[0],pos[1],pos[2]);
 	t_old = t;
 	t += dt;
-	pos_old = pos;
+	pos_old[0] = pos[0];
+	pos_old[1] = pos[1];
+	pos_old[2] = pos[2];
 	pos[0] += v[0] * dt;
 	pos[1] += v[1] * dt;
 	pos[2] += v[2] * dt;
 }
+
 /*
 Performs one particle and spin integration step.
 */
@@ -133,6 +138,7 @@ void particle::step() {
 	calc_next_collision_time();
 	move();
 	new_velocities();
+	integrate(t_old, t, S, pos_old, pos, v_old, v, opt);
 	// integrate_step();
 
 	n_steps += 1;
@@ -146,32 +152,36 @@ void particle::run() {
 	while (finished != true) {
 		step();
 	}
+	// printf("%f\t %f\t %f\n", S[0], S[1], S[2]);
 }
 
-void particle::interpolate(const double ti, std::vector<double>& p_out, std::vector<double>& v_out){
+/*
+void particle::interpolate(const double ti, double* p_out, double* v_out){
 	p_out[0] = (pos_old[0]*(t - ti) + pos[0]*(ti - t_old))/(t-t_old);
 	p_out[1] = (pos_old[1]*(t - ti) + pos[1]*(ti - t_old))/(t-t_old);
 	p_out[2] = (pos_old[2]*(t - ti) + pos[2]*(ti - t_old))/(t-t_old);
 	// printf("%f\t %f\t %f\n", pos_old[0], pos[0], p_out[0]);
-	v_out = v_old;
+	v_out[0] = v_old[0];
+	v_out[1] = v_old[1];
+	v_out[2] = v_old[2];
 }
-
 void particle::integrate_step(){
 	integrator.integrate(t_old,t);
 }
-
 void particle::integrate_spin(){
 	integrator.integrate(t0,tf);
 }
-
-void particle::Bloch(const double x, const std::vector<double>& y, std::vector<double>& f){
+void particle::Bloch(const double x, const double* y, double* f){
 	interpolate(x,p_interp,v_interp);
 	Bx = pulse(x);
 	grad(p_interp,G);
 	Bx += G[0];
-	By += G[1];
-	Bz += G[2];
+	By = G[1];
+	Bz = B0 + G[2];
+	// printf("%f\t %f\t %f\n",Bx,By,Bz);
     f[0] = gamma * (y[1]*Bz - y[2]*By);
 	f[1] = gamma * (y[2]*Bx - y[0]*Bz);
 	f[2] = gamma * (y[0]*By - y[1]*Bx);
 }
+
+*/
