@@ -138,7 +138,7 @@ void particle::step() {
 	calc_next_collision_time();
 	move();
 	new_velocities();
-	integrate(t_old, t, S, pos_old, pos, v_old, v, opt);
+	integrate(t_old, t, S, pos_old, pos, v_old, v, &lastOutput, opt);
 	// integrate_step();
 
 	n_steps += 1;

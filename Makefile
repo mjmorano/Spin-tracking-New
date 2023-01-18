@@ -1,7 +1,7 @@
 ##########################################################
 
 # CC compiler options:
-CC=pgc++
+CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
 CC_FLAGS= -O3 -acc
 CC_LIBS=
 
@@ -26,7 +26,7 @@ INC_DIR = include
 EXE = run
 
 # Object files:
-OBJS = $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 

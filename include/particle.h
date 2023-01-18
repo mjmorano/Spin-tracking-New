@@ -19,7 +19,7 @@ public:
 	size_t n_steps = 0;
 	bool finished = false;
 	bool bad = true;
-
+	double lastOutput = 0.0;
 	particle(double* y0, options OPT) :
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), gen(rd()), diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), Temp(OPT.T), gravity(OPT.gravity), pos(),
 		pos_old(), v(), v_old(), S(y0), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), gamma(OPT.gamma), G(), opt(OPT),

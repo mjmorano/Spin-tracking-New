@@ -22,8 +22,23 @@ double pulse(const double t){
     return 0.0;
 }
 
-void obs(long nr, double xold, double x, double* y, int* irtrn){
-    printf("%f\t %f\t %f\t %f\n", x, y[0], y[1], y[2]);
+void obs(long nr, double xold, double x, double* y, int* irtrn, options opts, double* lastOutput, unsigned int lastIndex, double* outputArray){
+	//printf("%ld %lf %lf %lf %lf\n", nr, x, opts.ioutInt, *lastOutput, x-*lastOutput);
+		
+	if(*lastOutput >= xold && *lastOutput < x){
+		outputArray[lastIndex] = x;
+		outputArray[lastIndex+1] = y[0];
+		outputArray[lastIndex+2] = y[1];
+		outputArray[lastIndex+3] = y[2];
+		*lastOutput += opts.ioutInt;
+		*lastIndex += 4;
+	}
+	
+	/*
+	if(x-xold > opts.ioutInt){
+		printf("%f\t %f\t %f\t %f\n", x, y[0], y[1], y[2]);
+	}
+	*/
 }
 
 void grad(double* pos, double* G){
@@ -109,7 +124,7 @@ void Bloch(const double t, const double* y, double* f, const double B0, const do
 
 // }
 
-int integrate(double t0, double tf, double* y0, const double* p_old, const double* p_new, const double* v_old, const double* v_new, options OPT){
+int integrate(double t0, double tf, double* y0, const double* p_old, const double* p_new, const double* v_old, const double* v_new, double *lastOutput, options OPT){
 
     double* y = y0;
     double yy1[3], k1[3], k2[3], k3[3], k4[3], k5[3], k6[3], k7[3], k8[3], k9[3], k10[3];
@@ -152,7 +167,7 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
         irtrn = 1;
         hout = 1.0;
         xout = t0;
-        obs(naccpt+1, xold, x, y, &irtrn);
+        obs(naccpt+1, xold, x, y, &irtrn, OPT, lastOutput);
     }
 
     while (1){
@@ -327,7 +342,7 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
             if (OPT.iout){
                 hout = h;
                 xout = x;
-                obs(naccpt+1, xold, x, y, &irtrn);
+                obs(naccpt+1, xold, x, y, &irtrn, OPT, lastOutput);
                 if (irtrn < 0)
                     return 2;
             }

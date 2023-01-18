@@ -3,7 +3,7 @@
 #include <cmath>
 #include "../include/options.h"
 
-void obs(long nr, double xold, double x, double* y, int* irtrn);
+void obs(long nr, double xold, double x, double* y, int* irtrn, options, double*);
 
 double pulse(const double t);
 
@@ -15,7 +15,7 @@ void grad(double*, double*);
 
 // double hinit(double, double*, double, double*, double*, double*, int, double, double, double);
 
-int integrate(double t0, double tf, double* y0, const double* p_old, const double* p_new, const double* v_old, const double* v_new, options OPT);
+int integrate(double t0, double tf, double* y0, const double* p_old, const double* p_new, const double* v_old, const double* v_new, double * lastOutput, options OPT);
 
 double sign(double, double);
 
