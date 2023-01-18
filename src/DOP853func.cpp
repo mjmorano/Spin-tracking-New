@@ -47,8 +47,8 @@ void Bloch(const double t, const double* y, double* f, const double B0, const do
 	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
 	Bx = pulse(t);
 	grad(p,G);
-	Bx += G[0] - v[1] * E / (299792458 * 299792458);
-	By = G[1] + v[0] * E / (299792458 * 299792458);
+	Bx += G[0] - v[1] * E / (299792458.0 * 299792458.0);
+	By = G[1] + v[0] * E / (299792458.0 * 299792458.0);
 	Bz = B0 + G[2];
 	// printf("%1.16f\t %1.16f\t %1.16f\n",Bx,By,Bz);
     f[0] = gamma * (y[1]*Bz - y[2]*By);
