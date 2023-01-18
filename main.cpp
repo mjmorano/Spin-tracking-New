@@ -7,8 +7,6 @@
 using namespace std;
 using namespace std::chrono;
 
-ofstream outfile;
-
 int main() {
 
     auto start = high_resolution_clock::now();
