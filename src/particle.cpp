@@ -1,5 +1,4 @@
 #include "../include/particle.h"
-
 /*
 Outputs the sign of a number.
 */
@@ -14,12 +13,12 @@ Calculates the timestep based on the next wall or gas collision.
 */
 
 void particle::calc_next_collision_time() {
-	dx = sgn(v[0]) * Lx / 2.0 - pos[0];
-	dy = sgn(v[1]) * Ly / 2.0 - pos[1];
-	dz = sgn(v[2]) * Lz / 2.0 - pos[2];
-	dtx = dx / v[0];
-	dty = dy / v[1];
-	dtz = dz / v[2];
+	dx = sgn(v.x) * Lx / 2.0 - pos.x;
+	dy = sgn(v.y) * Ly / 2.0 - pos.y;
+	dz = sgn(v.z) * Lz / 2.0 - pos.z;
+	dtx = dx / v.x;
+	dty = dy / v.y;
+	dtz = dz / v.z;
 
 	if (dtx < 1e-16)
 		dtx = 1e6;
@@ -58,58 +57,50 @@ Calculates the new velocities after a wall or gas collision.
 */
 
 void particle::new_velocities() {
-
-	v_old[0] = v[0];
-	v_old[1] = v[1];
-	v_old[2] = v[2];
-
+	v_old = v;
 	if (coll_type == 'W' && diffuse == false) {
 		if (wall_hit == 'x')
-			v[0] *= -1.0;
+			v.x *= -1.0;
 		else if (wall_hit == 'y')
-			v[1] *= -1.0;
+			v.y *= -1.0;
 		else if (wall_hit == 'z')
-			v[2] *= -1.0;
+			v.z *= -1.0;
 	}
 	else if (coll_type == 'W' && diffuse == true) {
-
 		//V = sqrt(vx * vx + vy * vy + vz * vz);
 		phi = acos(cbrt(1 - uni_0_1(gen)));
 		theta = uni_0_2pi(gen);
-
 		if (wall_hit == 'x') {
-			v[0] = -1 * sgn(v[0]) * Vel * cos(phi);
-			v[1] = -Vel * sin(phi) * cos(theta);
-			v[2] = Vel * sin(phi) * sin(theta);
+			v.x = -1 * sgn(v.x) * Vel * cos(phi);
+			v.y = -Vel * sin(phi) * cos(theta);
+			v.z = Vel * sin(phi) * sin(theta);
 		}
 		else if (wall_hit == 'y') {
-			v[0] = Vel * sin(phi) * cos(theta);
-			v[1] = -1 * sgn(v[1]) * Vel * cos(phi);
-			v[2] = Vel * sin(phi) * sin(theta);
+			v.x = Vel * sin(phi) * cos(theta);
+			v.y = -1 * sgn(v.y) * Vel * cos(phi);
+			v.z = Vel * sin(phi) * sin(theta);
 		}
 		else if (wall_hit == 'z') {
-			v[0] = Vel * sin(phi) * cos(theta);
-			v[1] = Vel * sin(phi) * sin(theta);
-			v[2] = -1 * sgn(v[2]) * Vel * cos(phi);
+			v.x = Vel * sin(phi) * cos(theta);
+			v.y = Vel * sin(phi) * sin(theta);
+			v.z = -1 * sgn(v.z) * Vel * cos(phi);
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v[0] = gen_max_boltz(gen);
-		v[1] = gen_max_boltz(gen);
-		v[2] = gen_max_boltz(gen);
+		v.x = gen_max_boltz(gen);
+		v.y = gen_max_boltz(gen);
+		v.z = gen_max_boltz(gen);
 
-		Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
-		std::vector<double> vec(3);
-		for (int i = 0; i < 3; i++)
-			vec[i] = gen_norm(gen);
-		double vec_norm = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-		v[0] = Vel * vec[0] / vec_norm;
-		v[1] = Vel * vec[1] / vec_norm;
-		v[2] = Vel * vec[2] / vec_norm;
-		Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-
+		double3 vec;
+		vec.x = gen_norm(gen);
+		vec.y = gen_norm(gen);
+		vec.z = gen_norm(gen);
+		double vec_norm = len(vec);
+		v = Vel * vec/vec_norm;
+		Vel = len(v);
 	}
 }
 
@@ -121,12 +112,8 @@ void particle::move() {
 	// printf("%f\t %f\t %f\t %f\n",t,pos[0],pos[1],pos[2]);
 	t_old = t;
 	t += dt;
-	pos_old[0] = pos[0];
-	pos_old[1] = pos[1];
-	pos_old[2] = pos[2];
-	pos[0] += v[0] * dt;
-	pos[1] += v[1] * dt;
-	pos[2] += v[2] * dt;
+	pos_old = pos;
+	pos = pos +  v * dt;
 }
 
 /*
@@ -134,11 +121,10 @@ Performs one particle and spin integration step.
 */
 
 void particle::step() {
-
 	calc_next_collision_time();
 	move();
 	new_velocities();
-	integrate(t_old, t, S, pos_old, pos, v_old, v, &lastOutput, opt);
+	integrate(t_old, t, S, pos_old, pos, v_old, v, opt, lastOutput, lastIndex, outputArray);
 	// integrate_step();
 
 	n_steps += 1;
