@@ -27,30 +27,30 @@ void obs(long nr, double xold, double x, double* y, int* irtrn){
 }
 
 void grad(double* pos, double* G){
-    G[0] = 0.0;
-    G[1] = 0.0;
-    G[2] = 0.0;
+    G[0] = -5e-9 * pos[0];
+    G[1] = -5e-9 * pos[1];
+    G[2] = 1e-8 * pos[2];
 }
 
 void interpolate(const double t, const double t0, const double tf, const double* p_old, const double* p_new, const double* v_old, const double* v_new, double* p_out, double* v_out){
 	p_out[0] = (p_old[0]*(tf - t) + p_new[0]*(t - t0))/(tf-t0);
 	p_out[1] = (p_old[1]*(tf - t) + p_new[1]*(t - t0))/(tf-t0);
 	p_out[2] = (p_old[2]*(tf - t) + p_new[2]*(t - t0))/(tf-t0);
-	// printf("%f\t %f\t %f\n", x_old[0], p_out[0], x_new[0]);
+	// printf("%f\t %f\t %f\n", p_old[0], p_out[0], p_new[0]);
 	v_out[0] = v_old[0];
 	v_out[1] = v_old[1];
 	v_out[2] = v_old[2];
 }
 
-void Bloch(const double t, const double* y, double* f, const double B0, const double gamma, const double t0, const double tf , const double* p_old, const double* p_new, const double* v_old, const double* v_new){
+void Bloch(const double t, const double* y, double* f, const double B0, const double E, const double gamma, const double t0, const double tf , const double* p_old, const double* p_new, const double* v_old, const double* v_new){
     double p[3], v[3], G[3], Bx, By, Bz;
 	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
 	Bx = pulse(t);
 	grad(p,G);
-	Bx += G[0];
-	By = G[1];
+	Bx += G[0] - v[1] * E / (299792458 * 299792458);
+	By = G[1] + v[0] * E / (299792458 * 299792458);
 	Bz = B0 + G[2];
-	// printf("%f\t %f\t %f\n",Bx,By,Bz);
+	// printf("%1.16f\t %1.16f\t %1.16f\n",Bx,By,Bz);
     f[0] = gamma * (y[1]*Bz - y[2]*By);
 	f[1] = gamma * (y[2]*Bx - y[0]*Bz);
 	f[2] = gamma * (y[0]*By - y[1]*Bx);
@@ -139,7 +139,7 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
     last  = 0;
     hlamb = 0.0;
     iasti = 0;
-    Bloch(x, y, k1, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+    Bloch(x, y, k1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
     double hmax = fabs(OPT.hmax);
     iord = 8;
     // if (OPT.h == 0.0)
@@ -179,44 +179,44 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
         /* the twelve stages */
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * COEF::a21 * k1[i];
-        Bloch(x+COEF::c2*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c2*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a31*k1[i] + COEF::a32*k2[i]);
-        Bloch(x+COEF::c3*h, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c3*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a41*k1[i] + COEF::a43*k3[i]);
-        Bloch(x+COEF::c4*h, yy1, k4, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c4*h, yy1, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i <n; i++)
             yy1[i] = y[i] + h * (COEF::a51*k1[i] + COEF::a53*k3[i] + COEF::a54*k4[i]);
-        Bloch(x+COEF::c5*h, yy1, k5, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c5*h, yy1, k5, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a61*k1[i] + COEF::a64*k4[i] + COEF::a65*k5[i]);
-        Bloch(x+COEF::c6*h, yy1, k6, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c6*h, yy1, k6, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a71*k1[i] + COEF::a74*k4[i] + COEF::a75*k5[i] + COEF::a76*k6[i]);
-        Bloch(x+COEF::c7*h, yy1, k7, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c7*h, yy1, k7, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a81*k1[i] + COEF::a84*k4[i] + COEF::a85*k5[i] + COEF::a86*k6[i] +
                     COEF::a87*k7[i]);
-        Bloch(x+COEF::c8*h, yy1, k8, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c8*h, yy1, k8, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i <n; i++)
             yy1[i] = y[i] + h * (COEF::a91*k1[i] + COEF::a94*k4[i] + COEF::a95*k5[i] + COEF::a96*k6[i] +
                     COEF::a97*k7[i] + COEF::a98*k8[i]);
-        Bloch(x+COEF::c9*h, yy1, k9, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c9*h, yy1, k9, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a101*k1[i] + COEF::a104*k4[i] + COEF::a105*k5[i] + COEF::a106*k6[i] +
                     COEF::a107*k7[i] + COEF::a108*k8[i] + COEF::a109*k9[i]);
-        Bloch(x+COEF::c10*h, yy1, k10, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c10*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a111*k1[i] + COEF::a114*k4[i] + COEF::a115*k5[i] + COEF::a116*k6[i] +
                     COEF::a117*k7[i] + COEF::a118*k8[i] + COEF::a119*k9[i] + COEF::a1110*k10[i]);
-        Bloch(x+COEF::c11*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c11*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         xph = x + h;
         for (i = 0; i < n; i++)
             yy1[i] = y[i] + h * (COEF::a121*k1[i] + COEF::a124*k4[i] + COEF::a125*k5[i] + COEF::a126*k6[i] +
                     COEF::a127*k7[i] + COEF::a128*k8[i] + COEF::a129*k9[i] +
                     COEF::a1210*k10[i] + COEF::a1211*k2[i]);
-        Bloch(xph, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(xph, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         nfcn += 11;
         for (i = 0; i < n; i++){
             k4[i] = COEF::b1*k1[i] + COEF::b6*k6[i] + COEF::b7*k7[i] + COEF::b8*k8[i] + COEF::b9*k9[i] +
@@ -259,7 +259,7 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
 
             facold = max_d (err, 1.0E-4);
             naccpt++;
-            Bloch(xph, k5, k4, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+            Bloch(xph, k5, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
             nfcn++;
             
             /* final preparation for dense output */
@@ -289,17 +289,17 @@ int integrate(double t0, double tf, double* y0, const double* p_old, const doubl
                     yy1[i] = y[i] + h * (COEF::a141*k1[i] + COEF::a147*k7[i] + COEF::a148*k8[i] +
                                 COEF::a149*k9[i] + COEF::a1410*k10[i] + COEF::a1411*k2[i] +
                                 COEF::a1412*k3[i] + COEF::a1413*k4[i]);
-                Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
                 for (i = 0; i < n; i++)
                     yy1[i] = y[i] + h * (COEF::a151*k1[i] + COEF::a156*k6[i] + COEF::a157*k7[i] + COEF::a158*k8[i] +
                                 COEF::a1511*k2[i] + COEF::a1512*k3[i] + COEF::a1513*k4[i] +
                                 COEF::a1514*k10[i]);
-                Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
                 for (i = 0; i < n; i++)
                     yy1[i] = y[i] + h * (COEF::a161*k1[i] + COEF::a166*k6[i] + COEF::a167*k7[i] + COEF::a168*k8[i] +
                                 COEF::a169*k9[i] + COEF::a1613*k4[i] + COEF::a1614*k10[i] +
                                 COEF::a1615*k2[i]);
-                Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
                 nfcn += 3;
 
                 /* final preparation */

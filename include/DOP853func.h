@@ -7,7 +7,7 @@ void obs(long nr, double xold, double x, double* y, int* irtrn);
 
 double pulse(const double t);
 
-void Bloch(const double t, const double* y, double* f, const double B0, const double gamma, const double t0, const double tf ,const double* p_old, const double* p_new, const double* v_old, const double* v_new);
+void Bloch(const double t, const double* y, double* f, const double B0, const double E, const double gamma, const double t0, const double tf ,const double* p_old, const double* p_new, const double* v_old, const double* v_new);
 
 void interpolate(const double t, const double t0, const double tf, const double* p_old, const double* p_new, const double* v_old, const double* v_new, double* p_out, double* v_out);
 
