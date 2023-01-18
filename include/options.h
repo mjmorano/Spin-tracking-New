@@ -28,5 +28,4 @@ struct options{
     double hmax = 1.0;
     double h = 0.0;
     unsigned int nmax = 10000000;
-    unsigned int n = 3;
 };
