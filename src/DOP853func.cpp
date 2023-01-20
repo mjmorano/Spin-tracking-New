@@ -26,8 +26,10 @@ void obs(long nr, double xold, double x, double3 y, int* irtrn, options opts,
 		double* lastOutput, unsigned int *lastIndex, float* outputArray){
 	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
 	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
+	
 	while(*lastOutput < x){
 		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
+		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
 		outputArray[*lastIndex] = x;
 		outputArray[*lastIndex+1] = y.x;
 		outputArray[*lastIndex+2] = y.y;

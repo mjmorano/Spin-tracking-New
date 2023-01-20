@@ -31,7 +31,7 @@ public:
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
 		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data)
 	{	
-
+		
 		create_identifier(nident);
 		initialize_individual(process_data, thread_data + ipart, nident[0]);
 		S = y0;
