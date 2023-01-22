@@ -22,6 +22,37 @@ double pulse(const double t){
     //return 0.0;
 }
 
+void obs_dense(long nr, double xold, double x, double3 y, int* irtrn, options opts, 
+		double* lastOutput, unsigned int *lastIndex, float* outputArray, double hout, double3& rcont1, double3& rcont2, 
+        double3& rcont3, double3& rcont4, double3& rcont5, double3& rcont6, double3& rcont7, double3& rcont8){
+	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
+	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
+
+    double s;
+    double s1;
+    double3 dense_out;
+	
+	while(*lastOutput < x){
+        s = (*lastOutput - xold)/hout;
+        s1 = 1.0 - s;
+        dense_out = rcont1+s*(rcont2+s1*(rcont3+s*(rcont4+s1*(rcont5+s*(rcont6+s1*(rcont7+s*rcont8))))));
+		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
+		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
+		outputArray[*lastIndex] = *lastOutput;
+		outputArray[*lastIndex+1] = dense_out.x;
+		outputArray[*lastIndex+2] = dense_out.y;
+		outputArray[*lastIndex+3] = dense_out.z;
+		*lastIndex += 4;
+		*lastOutput += opts.ioutInt;
+	}
+	
+	/*
+	if(x-xold > opts.ioutInt){
+		printf("%f\t %f\t %f\t %f\n", x, y[0], y[1], y[2]);
+	}
+	*/
+}
+
 void obs(long nr, double xold, double x, double3 y, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, float* outputArray){
 	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
@@ -327,10 +358,16 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
             xold = x;
             x = xph;
 
-            if (OPT.iout){
+            if (OPT.iout == 1){
                 hout = h;
                 xout = x;
 				obs(naccpt+1, xold, x, y, &irtrn, OPT, &lastOutput, &lastIndex, outputArray);
+                if (irtrn < 0)
+                    return 2;
+            } else if (OPT.iout == 2){
+                hout = h;
+                xout = x;
+				obs_dense(naccpt+1, xold, x, y, &irtrn, OPT, &lastOutput, &lastIndex, outputArray, hout, rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8);
                 if (irtrn < 0)
                     return 2;
             }
