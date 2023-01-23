@@ -27,9 +27,9 @@ public:
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
-		Temp(OPT.T), gravity(OPT.gravity), pos(), temp(OPT.T),
+		Temp(OPT.T), gravity(OPT.gravity), pos(), temp(OPT.T), max_step(OPT.max_step),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
-		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data)
+		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
 	{	
 		
 		create_identifier(nident);
@@ -39,8 +39,10 @@ public:
 		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;
 		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Ly-Ly/2.0;
 		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lz-Lz/2.0;
+		
+		//pos = {0.0, 0.0, 0.0};
 		pos_old = pos;
-        	t = t0;
+		t = t0;
 
 		if (gas_coll == true)
 			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);
@@ -64,6 +66,8 @@ public:
 			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
 			Vel = len(v);
 		}
+		//v = {0.0, -0.00001, 0.0};
+		Vel = 0.0;
 		v_old = v;
 	}
 
@@ -133,4 +137,5 @@ private:
 	unsigned int ipart;
 	unsigned int icount = 0;
 	unsigned long iprn;
+	double max_step = 0.001;
 };

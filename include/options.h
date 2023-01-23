@@ -1,18 +1,20 @@
 #pragma once
 
+const double G_CONST = -9.8;
+
 struct options{
-	double Lx = 0.4;
-	double Ly = 0.07;
-	double Lz = 0.10;
+	double Lx = 0.07;
+	double Ly = 0.1;
+	double Lz = 0.4;
 	char dist = 'C';
 	double m = 1.6e-27;
-	bool gas_coll = true;
+	bool gas_coll = false;
 	double tc = 1e-3;
 	double T = 4.2;
-	bool diffuse = true;
+	bool diffuse = false;
 	double gamma = -2.078e8;
 	double V = 5.0;
-	bool gravity = false;
+	bool gravity = true;
 	double B0 = 3e-6;
 	double E = 7500;
 	double t0 = 0.0;
@@ -29,4 +31,5 @@ struct options{
 	double hmax = 1.0;
 	double h = 0.0;
 	unsigned int nmax = 10000000;
+	double max_step = 0.001;
 };

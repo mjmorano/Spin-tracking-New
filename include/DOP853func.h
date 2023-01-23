@@ -5,7 +5,7 @@
 #include "../include/options.h"
 
 #pragma acc routine seq
-void obs(long nr, double xold, double x, double3 y, int* irtrn, 
+void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, 
 	options OPT, double* lastOutput, unsigned int* lastIndex, outputDtype* outputArray);		
 
 #pragma acc routine seq		
