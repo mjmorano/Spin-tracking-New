@@ -6,7 +6,7 @@
 
 #pragma acc routine seq
 void obs(long nr, double xold, double x, double3 y, int* irtrn, 
-	options OPT, double* lastOutput, unsigned int* lastIndex, float* outputArray);		
+	options OPT, double* lastOutput, unsigned int* lastIndex, outputDtype* outputArray);		
 
 #pragma acc routine seq		
 double pulse(const double t);
@@ -24,7 +24,7 @@ void grad(double3&, double3&);
 #pragma acc routine seq
 int integrate(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
 	const double3& v_old, const double3& v_new, options OPT,
-	double& lastOutput, unsigned int& lastIndex, float* outputArray);
+	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
 #pragma acc routine seq
 double sign(double, double);
 #pragma acc routine seq

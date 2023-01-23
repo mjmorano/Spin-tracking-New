@@ -23,7 +23,7 @@ double pulse(const double t){
 }
 
 void obs_dense(long nr, double xold, double x, double3 y, int* irtrn, options opts, 
-		double* lastOutput, unsigned int *lastIndex, float* outputArray, double hout, double3& rcont1, double3& rcont2, 
+		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray, double hout, double3& rcont1, double3& rcont2, 
         double3& rcont3, double3& rcont4, double3& rcont5, double3& rcont6, double3& rcont7, double3& rcont8){
 	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
 	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
@@ -33,16 +33,18 @@ void obs_dense(long nr, double xold, double x, double3 y, int* irtrn, options op
     double3 dense_out;
 	
 	while(*lastOutput < x){
-        s = (*lastOutput - xold)/hout;
-        s1 = 1.0 - s;
-        dense_out = rcont1+s*(rcont2+s1*(rcont3+s*(rcont4+s1*(rcont5+s*(rcont6+s1*(rcont7+s*rcont8))))));
+        	s = (*lastOutput - xold)/hout;
+        	s1 = 1.0 - s;
+        	dense_out = rcont1+s*(rcont2+s1*(rcont3+s*(rcont4+s1*(rcont5+s*(rcont6+s1*(rcont7+s*rcont8))))));
 		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
 		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
-		outputArray[*lastIndex] = *lastOutput;
-		outputArray[*lastIndex+1] = dense_out.x;
-		outputArray[*lastIndex+2] = dense_out.y;
-		outputArray[*lastIndex+3] = dense_out.z;
-		*lastIndex += 4;
+		outputDtype temp;
+		temp.t = *lastOutput;
+		temp.s.x = y.x;
+		temp.s.y = y.y;
+		temp.s.z = y.z;
+		outputArray[*lastIndex] = temp;
+		*lastIndex += 1;
 		*lastOutput += opts.ioutInt;
 	}
 	
@@ -54,18 +56,19 @@ void obs_dense(long nr, double xold, double x, double3 y, int* irtrn, options op
 }
 
 void obs(long nr, double xold, double x, double3 y, int* irtrn, options opts, 
-		double* lastOutput, unsigned int *lastIndex, float* outputArray){
+		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray){
 	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
 	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
 	
 	while(*lastOutput < x){
 		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
 		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
-		outputArray[*lastIndex] = x;
-		outputArray[*lastIndex+1] = y.x;
-		outputArray[*lastIndex+2] = y.y;
-		outputArray[*lastIndex+3] = y.z;
-		*lastIndex += 4;
+		outputDtype temp;
+		temp.t = x;
+		temp.s.x = y.x;
+		temp.s.y = y.y;
+		temp.s.z = y.z;
+		outputArray[*lastIndex] = temp;
 		*lastOutput += opts.ioutInt;	
 	}
 	
@@ -158,7 +161,7 @@ void Bloch(const double t, const double3& y, double3& f, const double B0,
 
 int integrate(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
-		options OPT, double& lastOutput, unsigned int& lastIndex, float* outputArray){
+		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
 
     double3 yy1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
     double3 rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8;

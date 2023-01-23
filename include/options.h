@@ -1,9 +1,9 @@
 #pragma once
 
 struct options{
-	double Lx = 0.5;
-	double Ly = 0.5;
-	double Lz = 0.5;
+	double Lx = 0.4;
+	double Ly = 0.07;
+	double Lz = 0.10;
 	char dist = 'C';
 	double m = 1.6e-27;
 	bool gas_coll = true;

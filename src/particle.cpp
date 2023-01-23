@@ -109,7 +109,7 @@ Moves the particle based on the particle velocity and calcuated timestep.
 */
 
 void particle::move() {
-	// printf("%f\t %f\t %f\t %f\n",t,pos[0],pos[1],pos[2]);
+	printf("%f\t %f\t %f\t %f\n",t,pos.x,pos.y,pos.z);
 	t_old = t;
 	t += dt;
 	pos_old = pos;

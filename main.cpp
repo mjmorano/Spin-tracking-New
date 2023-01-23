@@ -16,18 +16,17 @@ int main(int argc, char* argv[]) {
     	opt.diffuse = false;
     	opt.gas_coll = false;
     	opt.t0 = 0.0;
-    	opt.tf = 1.0;
+    	opt.tf = 10.0;
     	opt.ioutInt = 0.01;
     	opt.h = 0.0001;
     	opt.B0 = 3e-6;
-	int numParticles = 10000;
+	int numParticles = 1;
 
 	char * outputFilename = "data.bin";
 	
-	int numOutput = (opt.tf - opt.t0)/opt.ioutInt*4; // 4 because timestamp + spin vector	
-	size_t outputSize = numOutput * sizeof(float); //4 because timestamp + spin vector
-	float * outputArray = (float*)malloc(outputSize*numParticles);
-	std::cout<<numOutput<<" : "<<outputSize<<" : "<<outputSize*numParticles<<std::endl;
+	int numOutput = (opt.tf - opt.t0)/opt.ioutInt; 	
+	size_t outputSize = numOutput * sizeof(outputDtype); 
+	outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles);
 
 	unsigned long* nident = (unsigned long*)malloc(8 * numParticles);
 	desprng_common_t *process_data;
@@ -46,7 +45,6 @@ int main(int argc, char* argv[]) {
 	auto end = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end - start);
 	cout << "Execution Time: " << duration.count() << " ms\n";
-	cout << numOutput * 4 <<std::endl;
 	FILE* f = fopen(outputFilename, "wb");
 	fwrite(outputArray, outputSize * numParticles, 1, f);
 	fclose(f);	
