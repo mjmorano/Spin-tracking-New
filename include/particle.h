@@ -36,11 +36,11 @@ public:
 		initialize_individual(process_data, thread_data + ipart, nident[0]);
 		S = y0;
 		outputArray = storage;
-		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
-		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
-		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn);
+		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;
+		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Ly-Ly/2.0;
+		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lz-Lz/2.0;
 		pos_old = pos;
-        t = t0;
+        	t = t0;
 
 		if (gas_coll == true)
 			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);

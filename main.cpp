@@ -13,10 +13,10 @@ int main(int argc, char* argv[]) {
     	double3 yi = {1.0, 0.0, 0.0};
     	options opt;
     	opt.iout = 2;
-    	opt.diffuse = false;
-    	opt.gas_coll = false;
+    	opt.diffuse = true;
+    	opt.gas_coll = true;
     	opt.t0 = 0.0;
-    	opt.tf = 10.0;
+    	opt.tf = 4.0;
     	opt.ioutInt = 0.01;
     	opt.h = 0.0001;
     	opt.B0 = 3e-6;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	}
 	auto end = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end - start);
-	cout << "Execution Time: " << duration.count() << " ms\n";
+	//cout << "Execution Time: " << duration.count() << " ms\n";
 	FILE* f = fopen(outputFilename, "wb");
 	fwrite(outputArray, outputSize * numParticles, 1, f);
 	fclose(f);	
