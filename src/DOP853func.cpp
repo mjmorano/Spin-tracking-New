@@ -4,7 +4,7 @@
 
 double sign(double a, double b)
 {
-  return (b < 0.0)? -fabs(a) : fabs(a);
+  return (b < 0.0)? -std::abs(a) : std::abs(a);
 }
 
 double min_d(double a, double b)
@@ -126,7 +126,7 @@ void Bloch(const double t, const double3& y, double3& f, const double B0,
 //     rtoli = OPT.rtol;
 
 //     for (i = 0; i < n; i++){
-//         sk = atoli + rtoli * fabs(y[i]);
+//         sk = atoli + rtoli * std::abs(y[i]);
 //         sqr = f0[i] / sk;
 //         dnf += sqr*sqr;
 //         sqr = y[i] / sk;
@@ -149,19 +149,19 @@ void Bloch(const double t, const double3& y, double3& f, const double B0,
 //     /* estimate the second derivative of the solution */
 //     der2 = 0.0;
 //     for (i = 0; i < n; i++){
-//         sk = atoli + rtoli * fabs(y[i]);
+//         sk = atoli + rtoli * std::abs(y[i]);
 //         sqr = (f1[i] - f0[i]) / sk;
 //         der2 += sqr*sqr;
 //     }
 //     der2 = sqrt (der2) / h;
 
 //     /* step size is computed such that h**iord * max_d(norm(f0),norm(der2)) = 0.01 */
-//     der12 = max_d(fabs(der2), sqrt(dnf));
+//     der12 = max_d(std::abs(der2), sqrt(dnf));
 //     if (der12 <= 1.0E-15)
-//     h1 = max_d (1.0E-6, fabs(h)*1.0E-3);
+//     h1 = max_d (1.0E-6, std::abs(h)*1.0E-3);
 //     else
 //     h1 = pow (0.01/der12, 1.0/(double)iord);
-//     h = min_d (100.0 * fabs(h), min_d (h1, OPT.hmax));
+//     h = min_d (100.0 * std::abs(h), min_d (h1, OPT.hmax));
 
 //     return sign (h, posneg);
 
@@ -204,7 +204,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
     Bloch(x, y, k1, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 	//printf("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
 
-    double hmax = fabs(OPT.hmax);
+    double hmax = std::abs(OPT.hmax);
     iord = 8;
     // if (OPT.h == 0.0)
     //     h = hinit(fcn, x0, y, posneg, k1, k2, k3, iord, hmax, OPT.atol, OPT.rtol);
@@ -226,7 +226,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
             return -2;
         }
 
-        if (0.1 * fabs(h) <= fabs(x) * OPT.uround){
+        if (0.1 * std::abs(h) <= std::abs(x) * OPT.uround){
             xout = x;
             hout = h;
             return -3;
@@ -299,7 +299,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         deno = err + 0.01 * err2;
         if (deno <= 0.0)
 			deno = 1.0;
-        err = fabs(h) * err * sqrt (1.0 / (deno*(double)n));
+        err = std::abs(h) * err * sqrt (1.0 / (deno*(double)n));
 
         /* computation of hnew */
         fac11 = pow (err, expo1);
@@ -391,10 +391,10 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
                 return 1;
             }
 
-            if (fabs(hnew) > hmax)
+            if (std::abs(hnew) > hmax)
                 hnew = posneg * hmax;
             if (reject)
-                hnew = posneg * min_d (fabs(hnew), fabs(h));
+                hnew = posneg * min_d (std::abs(hnew), std::abs(h));
 
             reject = 0;
         }

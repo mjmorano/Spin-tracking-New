@@ -30,7 +30,7 @@ void particle::calc_next_collision_time() {
 			double temp1 = -1.0 * (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)+v.y)/G_CONST;
 			double temp2 = (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)-v.y)/G_CONST;
 			//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
-			dty = std::min({abs(temp1), abs(temp2)});
+			dty = std::min({std::abs(temp1), std::abs(temp2)});
 		}
 		else{
 			double maxHeight = -0.5 * v.y*v.y/G_CONST + pos.y;
@@ -44,7 +44,7 @@ void particle::calc_next_collision_time() {
 				dy = Ly / 2.0 - pos.y; //how far to ceiling
 				double temp1 = (-v.y + sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
 				double temp2 = (-v.y - sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
-				dty = std::min({abs(temp1), abs(temp2)});
+				dty = std::min({std::abs(temp1), std::abs(temp2)});
 			}
 		}
 		if (dtx < 1e-16 || std::isnan(dtx))
