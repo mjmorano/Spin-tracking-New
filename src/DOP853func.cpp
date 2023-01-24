@@ -18,8 +18,8 @@ double max_d(double a, double b)
 }
 
 double pulse(const double t){
-    return 19.1026874e-6*cos(3000*t);
-    //return 0.0;
+    // return 19.1026874e-6*cos(3000*t);
+    return 0.0;
 }
 
 void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
@@ -45,9 +45,9 @@ void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, doubl
 		temp.x.x = outPos.x;
 		temp.x.y = outPos.y;
 		temp.x.z = outPos.z;
-		temp.s.x = y.x;
-		temp.s.y = y.y;
-		temp.s.z = y.z;
+		temp.s.x = dense_out.x;
+		temp.s.y = dense_out.y;
+		temp.s.z = dense_out.z;
 		outputArray[*lastIndex] = temp;
 		*lastIndex += 1;
 		*lastOutput += opts.ioutInt;
@@ -77,7 +77,7 @@ void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, opt
 		temp.s.y = y.y;
 		temp.s.z = y.z;
 		outputArray[*lastIndex] = temp;
-		*lastOutput += opts.ioutInt;	
+		*lastOutput += opts.ioutInt;
 	}
 	
 	/*
