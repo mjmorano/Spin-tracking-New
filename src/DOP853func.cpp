@@ -4,7 +4,7 @@
 
 double sign(double a, double b)
 {
-  return (b < 0.0)? -std::abs(a) : std::abs(a);
+  return (b < 0.0)? -asm_abs(a) : asm_abs(a);
 }
 
 double min_d(double a, double b)
@@ -204,7 +204,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
     Bloch(x, y, k1, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 	//printf("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
 
-    double hmax = std::abs(OPT.hmax);
+    double hmax = asm_abs(OPT.hmax);
     iord = 8;
     // if (OPT.h == 0.0)
     //     h = hinit(fcn, x0, y, posneg, k1, k2, k3, iord, hmax, OPT.atol, OPT.rtol);
@@ -226,7 +226,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
             return -2;
         }
 
-        if (0.1 * std::abs(h) <= std::abs(x) * OPT.uround){
+        if (0.1 * asm_abs(h) <= asm_abs(x) * OPT.uround){
             xout = x;
             hout = h;
             return -3;
@@ -299,7 +299,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         deno = err + 0.01 * err2;
         if (deno <= 0.0)
 			deno = 1.0;
-        err = std::abs(h) * err * sqrt (1.0 / (deno*(double)n));
+        err = asm_abs(h) * err * sqrt (1.0 / (deno*(double)n));
 
         /* computation of hnew */
         fac11 = pow (err, expo1);
@@ -391,10 +391,10 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
                 return 1;
             }
 
-            if (std::abs(hnew) > hmax)
+            if (asm_abs(hnew) > hmax)
                 hnew = posneg * hmax;
             if (reject)
-                hnew = posneg * min_d (std::abs(hnew), std::abs(h));
+                hnew = posneg * min_d (asm_abs(hnew), asm_abs(h));
 
             reject = 0;
         }

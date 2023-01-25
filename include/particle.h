@@ -66,8 +66,8 @@ public:
 			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
 			Vel = len(v);
 		}
-		//v = {0.0, -0.00001, 0.0};
-		Vel = 0.0;
+		//v = {0.0, 0.5, 0.0};
+		Vel = len(v);
 		v_old = v;
 	}
 

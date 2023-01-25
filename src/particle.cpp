@@ -25,26 +25,30 @@ void particle::calc_next_collision_time() {
 		//time to wall for x and z coordinate
 		dtx = dx / v.x;
 		dtz = dz / v.z;
+		double y2 = v.y * v.y;
 		if(sgn(v.y) <= 0.0){ //if the particle has negative y velocity
-			dy = pos.y + Ly/2.0;
-			double temp1 = -1.0 * (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)+v.y)/G_CONST;
-			double temp2 = (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)-v.y)/G_CONST;
+			dy = pos.y + Ly*0.5;
+			double sqr = sqrt(-2.0*G_CONST*dy+y2);
+			double temp1 = -(sqr+v.y)/G_CONST;
+			double temp2 = (sqr-v.y)/G_CONST;
 			//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
-			dty = std::min({std::abs(temp1), std::abs(temp2)});
+			dty = std::min({asm_abs(temp1), asm_abs(temp2)});
 		}
-		else{
-			double maxHeight = -0.5 * v.y*v.y/G_CONST + pos.y;
+		else{	
+			double maxHeight = -0.5 * y2/G_CONST + pos.y;
 			if(maxHeight < 0.5 * Ly){ //in this case it can't hit the ceiling
-				//figure out how long until it reaches the bottom of the cell
-				double temp1 = -1.0 * (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)+v.y)/G_CONST;
-				double temp2 = (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)-v.y)/G_CONST;
+				dy = pos.y+Ly*0.5;
+				double sqr = sqrt(-2.0*G_CONST*dy+y2);
+				double temp1 = -(sqr+v.y)/G_CONST;
+				double temp2 = (sqr-v.y)/G_CONST;
 				dty = std::max({temp1, temp2});
 			}
 			else{
-				dy = Ly / 2.0 - pos.y; //how far to ceiling
-				double temp1 = (-v.y + sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
-				double temp2 = (-v.y - sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
-				dty = std::min({std::abs(temp1), std::abs(temp2)});
+				dy = Ly*0.5 - pos.y; //how far to ceiling
+				double sqr = sqrt(-2.0*G_CONST*dy+y2);
+				double temp1 = -(sqr+v.y)/G_CONST;
+				double temp2 = (sqr-v.y)/G_CONST;
+				dty = std::min({asm_abs(temp1), asm_abs(temp2)});
 			}
 		}
 		if (dtx < 1e-16 || std::isnan(dtx))

@@ -19,6 +19,9 @@ struct outputDtype {
 };
 
 #pragma acc routine seq
+double asm_abs(double val);
+
+#pragma acc routine seq
 double3 operator+(const double3, const double3);
 #pragma acc routine seq
 double3 operator+(const double3, const double);

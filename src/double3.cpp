@@ -1,6 +1,10 @@
 #include "../include/double3.h"
 #include <cmath>
 
+double asm_abs(double val){
+	return std::abs(val);
+}
+
 double3 operator+(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.x + b.x;
@@ -86,9 +90,9 @@ double3 norm(const double3 a){
 
 double3 fabs3(const double3 a){
 	double3 out;
-	out.x = std::abs(a.x);
-	out.y = std::abs(a.y);
-	out.z = std::abs(a.z);
+	out.x = asm_abs(a.x);
+	out.y = asm_abs(a.y);
+	out.z = asm_abs(a.z);
 	return out;
 }
 
