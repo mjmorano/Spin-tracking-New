@@ -4,7 +4,7 @@
 
 double sign(double a, double b)
 {
-  return (b < 0.0)? -fabs(a) : fabs(a);
+  return (b < 0.0)? -std::abs(a) : std::abs(a);
 }
 
 double min_d(double a, double b)
@@ -101,15 +101,15 @@ void interpolate(const double t, const double t0, const double tf,
 	v_out = v_old;
 }
 
-void Bloch(const double t, const double3& y, double3& f, const double B0, 
-			const double gamma, const double t0, const double tf , const double3& p_old, 
+void Bloch(const double t, const double3& y, double3& f, const double B0, const double E,
+			const double gamma, const double t0, const double tf , const double3& p_old,
 			const double3& p_new, const double3& v_old, const double3& v_new){
     double3 p, v, G;
     double Bx, By, Bz;
 	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
 	Bx = pulse(t);
 	grad(p,G);
-	double3 B = {Bx+G.x, G.y, B0+G.z};
+	double3 B = {Bx+G.x-v.y*E/c2, G.y+v.x*E/c2, B0+G.z};
 	// printf("%f\t %f\t %f\n",Bx,By,Bz);
 	f = gamma * cross(y, B);
 }
@@ -126,7 +126,7 @@ void Bloch(const double t, const double3& y, double3& f, const double B0,
 //     rtoli = OPT.rtol;
 
 //     for (i = 0; i < n; i++){
-//         sk = atoli + rtoli * fabs(y[i]);
+//         sk = atoli + rtoli * std::abs(y[i]);
 //         sqr = f0[i] / sk;
 //         dnf += sqr*sqr;
 //         sqr = y[i] / sk;
@@ -149,19 +149,19 @@ void Bloch(const double t, const double3& y, double3& f, const double B0,
 //     /* estimate the second derivative of the solution */
 //     der2 = 0.0;
 //     for (i = 0; i < n; i++){
-//         sk = atoli + rtoli * fabs(y[i]);
+//         sk = atoli + rtoli * std::abs(y[i]);
 //         sqr = (f1[i] - f0[i]) / sk;
 //         der2 += sqr*sqr;
 //     }
 //     der2 = sqrt (der2) / h;
 
 //     /* step size is computed such that h**iord * max_d(norm(f0),norm(der2)) = 0.01 */
-//     der12 = max_d(fabs(der2), sqrt(dnf));
+//     der12 = max_d(std::abs(der2), sqrt(dnf));
 //     if (der12 <= 1.0E-15)
-//     h1 = max_d (1.0E-6, fabs(h)*1.0E-3);
+//     h1 = max_d (1.0E-6, std::abs(h)*1.0E-3);
 //     else
 //     h1 = pow (0.01/der12, 1.0/(double)iord);
-//     h = min_d (100.0 * fabs(h), min_d (h1, OPT.hmax));
+//     h = min_d (100.0 * std::abs(h), min_d (h1, OPT.hmax));
 
 //     return sign (h, posneg);
 
@@ -201,10 +201,10 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
     hlamb = 0.0;
     iasti = 0;
 	//printf("k1 prior = %lf %lf %lf\n", k1.x, k1.y, k1.z);
-    Bloch(x, y, k1, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+    Bloch(x, y, k1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 	//printf("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
 
-    double hmax = fabs(OPT.hmax);
+    double hmax = std::abs(OPT.hmax);
     iord = 8;
     // if (OPT.h == 0.0)
     //     h = hinit(fcn, x0, y, posneg, k1, k2, k3, iord, hmax, OPT.atol, OPT.rtol);
@@ -226,7 +226,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
             return -2;
         }
 
-        if (0.1 * fabs(h) <= fabs(x) * OPT.uround){
+        if (0.1 * std::abs(h) <= std::abs(x) * OPT.uround){
             xout = x;
             hout = h;
             return -3;
@@ -244,40 +244,40 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         yy1 = y + h * COEF::a21 * k1;
 		//printf("yy12 = %lf %lf %lf\n", yy1.x, yy1.y, yy1.z);
 
-        Bloch(x+COEF::c2*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c2*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 		
         yy1 = y + h * (COEF::a31*k1 + COEF::a32*k2);
-        Bloch(x+COEF::c3*h, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c3*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a41*k1 + COEF::a43*k3);
-        Bloch(x+COEF::c4*h, yy1, k4, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c4*h, yy1, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a51*k1 + COEF::a53*k3 + COEF::a54*k4);
-        Bloch(x+COEF::c5*h, yy1, k5, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c5*h, yy1, k5, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a61*k1 + COEF::a64*k4 + COEF::a65*k5);
-        Bloch(x+COEF::c6*h, yy1, k6, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c6*h, yy1, k6, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a71*k1 + COEF::a74*k4 + COEF::a75*k5 + COEF::a76*k6);
-        Bloch(x+COEF::c7*h, yy1, k7, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c7*h, yy1, k7, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a81*k1 + COEF::a84*k4 + COEF::a85*k5 + COEF::a86*k6 + COEF::a87*k7);
-        Bloch(x+COEF::c8*h, yy1, k8, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c8*h, yy1, k8, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a91*k1 + COEF::a94*k4 + COEF::a95*k5 + COEF::a96*k6 + COEF::a97*k7 + COEF::a98*k8);
-        Bloch(x+COEF::c9*h, yy1, k9, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c9*h, yy1, k9, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a101*k1 + COEF::a104*k4 + COEF::a105*k5 + COEF::a106*k6 + COEF::a107*k7 + COEF::a108*k8 + COEF::a109*k9);
-        Bloch(x+COEF::c10*h, yy1, k10, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c10*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 
         yy1 = y + h * (COEF::a111*k1 + COEF::a114*k4 + COEF::a115*k5 + COEF::a116*k6 + COEF::a117*k7 + COEF::a118*k8 + COEF::a119*k9 + COEF::a1110*k10);
 
-        Bloch(x+COEF::c11*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(x+COEF::c11*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         xph = x + h;
 
         yy1 = y + h * (COEF::a121*k1 + COEF::a124*k4 + COEF::a125*k5 + COEF::a126*k6 + COEF::a127*k7 + COEF::a128*k8 + COEF::a129*k9 + COEF::a1210*k10 + COEF::a1211*k2);
 
-        Bloch(xph, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+        Bloch(xph, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
         nfcn += 11;
 
         k4 = COEF::b1*k1 + COEF::b6*k6 + COEF::b7*k7 + COEF::b8*k8 + COEF::b9*k9 + COEF::b10*k10 + COEF::b11*k2 + COEF::b12*k3;
@@ -299,7 +299,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         deno = err + 0.01 * err2;
         if (deno <= 0.0)
 			deno = 1.0;
-        err = fabs(h) * err * sqrt (1.0 / (deno*(double)n));
+        err = std::abs(h) * err * sqrt (1.0 / (deno*(double)n));
 
         /* computation of hnew */
         fac11 = pow (err, expo1);
@@ -315,7 +315,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
 
             facold = max_d (err, 1.0E-4);
             naccpt++;
-            Bloch(xph, k5, k4, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+            Bloch(xph, k5, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
             nfcn++;
             
             /* final preparation for dense output */
@@ -341,15 +341,15 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
 			   yy1 = y + h * (COEF::a141*k1 + COEF::a147*k7 + COEF::a148*k8 +
 					COEF::a149*k9 + COEF::a1410*k10 + COEF::a1411*k2 +
 					COEF::a1412*k3 + COEF::a1413*k4);
-                Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 				yy1 = y + h * (COEF::a151*k1 + COEF::a156*k6 + COEF::a157*k7 + COEF::a158*k8 +
 					COEF::a1511*k2 + COEF::a1512*k3 + COEF::a1513*k4 +
 					COEF::a1514*k10);
-                Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 				yy1 = y + h * (COEF::a161*k1 + COEF::a166*k6 + COEF::a167*k7 + COEF::a168*k8 +
 							COEF::a169*k9 + COEF::a1613*k4 + COEF::a1614*k10 +
 							COEF::a1615*k2);
-                Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+                Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
                 nfcn += 3;
 
                 /* final preparation */
@@ -391,10 +391,10 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
                 return 1;
             }
 
-            if (fabs(hnew) > hmax)
+            if (std::abs(hnew) > hmax)
                 hnew = posneg * hmax;
             if (reject)
-                hnew = posneg * min_d (fabs(hnew), fabs(h));
+                hnew = posneg * min_d (std::abs(hnew), std::abs(h));
 
             reject = 0;
         }
