@@ -70,7 +70,68 @@ public:
 		Vel = len(v);
 		v_old = v;
 	}
-
+	particle & operator=(const particle& p)	
+	{
+		n_bounce = p.n_bounce;
+		n_coll = p.n_coll;
+		n_steps = p.n_steps;
+		finished = p.finished;
+		bad = p.bad;
+		lastOutput = p.lastOutput;
+		lastIndex = p.lastIndex;
+		outputArray = p.outputArray;
+		thread_data = p.thread_data;
+		process_data = p.process_data;
+		opt = p.opt;
+		diffuse = p.diffuse;
+		gas_coll = p.gas_coll;
+		gravity = p.gravity;
+		y = p.y;
+		theta = p.theta;
+		phi = p.phi;
+		m = p.m;	
+		tc = p.tc;
+		S = p.S;
+		v = p.v;
+		v_old = p.v_old;
+		pos = p.pos;
+		p_interp = p.p_interp;
+		v_interp = p.v_interp;
+		G = p.G;
+		temp = p.temp;
+		V_init = p.V_init;
+		Vel = p.Vel;
+		Lx = p.Lx;
+		Ly = p.Ly;
+		Lz = p.Lz;
+		coll_type = p.coll_type;
+		dist = p.dist;
+		t0 = p.t0;
+		tf = p.tf;
+		t_total = p.t_total;
+		t = p.t;
+		t_old = p.t_old;
+		dt = p.dt;
+		next_gas_coll_time = p.next_gas_coll_time;
+		dx = p.dx;
+		dy = p.dy;
+		dz = p.dz;
+		dtx = p.dtx;
+		dty = p.dty;
+		dtz = p.dtz;
+		tbounce = p.tbounce;
+		wall_hit = p.wall_hit;
+		Temp = p.Temp;
+		Bx = p.Bx;
+		By = p.By;
+		Bz = p.Bz;
+		B0 = p.B0;
+		gamma = p.gamma;
+		ipart = p.ipart;
+		icount = p.icount;
+		iprn = p.iprn;
+		max_step = p.max_step;	
+	}
 	~particle() {};
 	#pragma acc routine seq
 	void calc_next_collision_time();
@@ -85,13 +146,12 @@ public:
 	#pragma acc routine seq
 	void run();
 
-private:
 	desprng_individual_t* thread_data; 
 	desprng_common_t* process_data;
 	options opt;
-	const bool diffuse;
-	const bool gas_coll;
-	const bool gravity;
+	bool diffuse;
+	bool gas_coll;
+	bool gravity;
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
@@ -108,14 +168,14 @@ private:
 	double temp;
 	double V_init;
 	double Vel = 0.0;
-	const double Lx;
-	const double Ly;
-	const double Lz;
+	double Lx;
+	double Ly;
+	double Lz;
 	char coll_type = 'W';
 	char dist = 'C';
-	const double t0 = 0.0;
-	const double tf = 0.0;
-	const double t_total = tf - t0;
+	double t0 = 0.0;
+	double tf = 0.0;
+	double t_total = tf - t0;
 	double t = t0;
 	double t_old = t0;
 	double dt = 0.0;

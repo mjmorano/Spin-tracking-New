@@ -46,12 +46,38 @@ int main(int argc, char* argv[]) {
 	process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
 	initialize_common(process_data);
 
+	particle* ps = (particle*)malloc(sizeof(particle)*numParticles);
+
+	int numIter = 20;
 	if(local_rank <= num_devices){
-		#pragma acc parallel loop create(thread_data[:numParticles], nident[:numParticles]) copyin(process_data[:1]), copyout(outputArray[:numParticles*numOutput])
-		for(int n = 0; n<numParticles;n++){
-			nident[n] = (unsigned long)n;	//this is assigning the seed to the RNG
-			particle p(yi, opt, thread_data+n, process_data, n, nident, &outputArray[n*numOutput]);
-			p.run();		
+		#pragma acc data default(present) copy(ps[:numParticles]) 
+		{
+			#pragma acc parallel loop
+			for(int n = 0; n<numParticles;n++){
+				nident[n] = (unsigned long)n;	//this is assigning the seed to the RNG
+				particle p(yi, opt, thread_data+n, process_data, n, nident, &outputArray[n*numOutput]);
+				ps[n] = p;
+			}
+			for(int iter = 0; iter < numIter; iter++){
+				#pragma acc parallel loop
+				for(int n = 0; n < numParticles; n++){
+					ps[n].calc_next_collision_time();
+				}
+				#pragma acc parallel loop
+				for(int n = 0; n < numParticles; n++){
+					ps[n].move();
+				}
+				#pragma acc parallel loop
+				for(int n = 0; n < numParticles; n++){
+					ps[n].new_velocities();
+				}
+				#pragma acc parallel loop
+				for(int n = 0; n < numParticles; n++){
+					integrate(ps[n].t_old, ps[n].t, ps[n].S, ps[n].pos_old, ps[n].pos,
+						ps[n].v_old, ps[n].v, opt, ps[n].lastOutput, ps[n].lastIndex, ps[n].outputArray) ;
+					ps[n].n_steps++;
+				}
+			}
 		}
 		FILE* f = fopen(outputFilename, "wb");
 		fwrite(outputArray, outputSize * numParticles, 1, f);
