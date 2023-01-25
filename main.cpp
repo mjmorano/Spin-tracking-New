@@ -6,6 +6,7 @@
 #include "include/dists.h"
 #include <openacc.h>
 
+
 using namespace std;
 using namespace std::chrono;
 
@@ -13,24 +14,14 @@ int main(int argc, char* argv[]) {
 	auto start = high_resolution_clock::now();
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
-	opt.iout = 2;
-	opt.diffuse = false;
-	opt.gas_coll = false;
-	opt.gravity = false;
-	opt.t0 = 0.0;
-	opt.tf = 10.0;
-	opt.ioutInt = 0.001;
-	opt.h = 0.0001;
-	opt.B0 = 3e-6;
-	opt.gravity = false;
 	int numParticles = 10;
 
 	char * outputFilename = "data.bin";
 	
 	int numOutput = (opt.tf - opt.t0)/opt.ioutInt; 	
-	size_t outputSize = numOutput * sizeof(outputDtype); 
+	size_t outputSize = numOutput * sizeof(outputDtype);
+	
 	outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles);
-
 	unsigned long* nident = (unsigned long*)malloc(8 * numParticles);
 	desprng_common_t *process_data;
     desprng_individual_t *thread_data;
@@ -46,6 +37,7 @@ int main(int argc, char* argv[]) {
 		p.run();
 		//printf("reached on %d\n", n);
 	}
+		
 	auto end = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end - start);
 	//cout << "Execution Time: " << duration.count() << " ms\n";
