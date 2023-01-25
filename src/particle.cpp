@@ -25,27 +25,31 @@ void particle::calc_next_collision_time() {
 		//time to wall for x and z coordinate
 		dtx = dx / v.x;
 		dtz = dz / v.z;
+		double y2 = v.y * v.y;
 		if(sgn(v.y) <= 0.0){ //if the particle has negative y velocity
-			dy = pos.y + Ly/2.0;
-			double temp1 = -1.0 * (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)+v.y)/G_CONST;
-			double temp2 = (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)-v.y)/G_CONST;
-			//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
-			dty = std::min({abs(temp1), abs(temp2)});
+				dy = pos.y + Ly*0.5;
+				double sqr = sqrt(-2.0*G_CONST*dy+y2);
+				double temp1 = -(sqr+v.y)/G_CONST;
+				double temp2 = (sqr-v.y)/G_CONST;
+				//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
+				dty = std::min({std::abs(temp1), std::abs(temp2)});
 		}
 		else{
-			double maxHeight = -0.5 * v.y*v.y/G_CONST + pos.y;
-			if(maxHeight < 0.5 * Ly){ //in this case it can't hit the ceiling
-				//figure out how long until it reaches the bottom of the cell
-				double temp1 = -1.0 * (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)+v.y)/G_CONST;
-				double temp2 = (sqrt(2.0*G_CONST*(-0.5*Ly-pos.y)+v.y*v.y)-v.y)/G_CONST;
-				dty = std::max({temp1, temp2});
-			}
-			else{
-				dy = Ly / 2.0 - pos.y; //how far to ceiling
-				double temp1 = (-v.y + sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
-				double temp2 = (-v.y - sqrt(v.y*v.y + 2.0*G_CONST*dy))/2.0*G_CONST;
-				dty = std::min({abs(temp1), abs(temp2)});
-			}
+				double maxHeight = -0.5 * y2/G_CONST + pos.y;
+				if(maxHeight < 0.5 * Ly){ //in this case it can't hit the ceiling
+						dy = pos.y+Ly*0.5;
+						double sqr = sqrt(-2.0*G_CONST*dy+y2);
+						double temp1 = -(sqr+v.y)/G_CONST;
+						double temp2 = (sqr-v.y)/G_CONST;
+						dty = std::max({temp1, temp2});
+				}
+				else{
+						dy = Ly*0.5 - pos.y; //how far to ceiling
+						double sqr = sqrt(-2.0*G_CONST*dy+y2);
+						double temp1 = -(sqr+v.y)/G_CONST;
+						double temp2 = (sqr-v.y)/G_CONST;
+						dty = std::min({std::abs(temp1), std::abs(temp2)});
+				}
 		}
 		if (dtx < 1e-16 || std::isnan(dtx))
 			dtx = 1e6;
@@ -105,7 +109,7 @@ void particle::calc_next_collision_time() {
 	}
 	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) { //is a gas collision next?
 		dt = next_gas_coll_time - t;
-		next_gas_coll_time += exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);
+		next_gas_coll_time += exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn), tc);
 		coll_type = 'G';
 		n_coll += 1;
 	}
@@ -158,9 +162,9 @@ void particle::new_velocities() {
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
-		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
-		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
+		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
 		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
@@ -218,34 +222,3 @@ void particle::run() {
 	}
 	// printf("%f\t %f\t %f\n", S[0], S[1], S[2]);
 }
-
-/*
-void particle::interpolate(const double ti, double* p_out, double* v_out){
-	p_out[0] = (pos_old[0]*(t - ti) + pos[0]*(ti - t_old))/(t-t_old);
-	p_out[1] = (pos_old[1]*(t - ti) + pos[1]*(ti - t_old))/(t-t_old);
-	p_out[2] = (pos_old[2]*(t - ti) + pos[2]*(ti - t_old))/(t-t_old);
-	// printf("%f\t %f\t %f\n", pos_old[0], pos[0], p_out[0]);
-	v_out[0] = v_old[0];
-	v_out[1] = v_old[1];
-	v_out[2] = v_old[2];
-}
-void particle::integrate_step(){
-	integrator.integrate(t_old,t);
-}
-void particle::integrate_spin(){
-	integrator.integrate(t0,tf);
-}
-void particle::Bloch(const double x, const double* y, double* f){
-	interpolate(x,p_interp,v_interp);
-	Bx = pulse(x);
-	grad(p_interp,G);
-	Bx += G[0];
-	By = G[1];
-	Bz = B0 + G[2];
-	// printf("%f\t %f\t %f\n",Bx,By,Bz);
-    f[0] = gamma * (y[1]*Bz - y[2]*By);
-	f[1] = gamma * (y[2]*Bx - y[0]*Bz);
-	f[2] = gamma * (y[0]*By - y[1]*Bx);
-}
-
-*/

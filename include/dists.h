@@ -8,7 +8,7 @@ double approx(const double t);
 double normal01(const double u);
 
 #pragma acc routine(maxboltz) seq
-double maxboltz(const double u, const double T, const double m);
+double maxboltz(const double u, const double kT, const double m);
 
 #pragma acc routine(unif02pi) seq
 double unif02pi(const double u);

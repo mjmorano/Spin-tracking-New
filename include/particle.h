@@ -27,7 +27,7 @@ public:
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
-		Temp(OPT.T), gravity(OPT.gravity), pos(), temp(OPT.T), max_step(OPT.max_step),
+		gravity(OPT.gravity), pos(), KT(k*OPT.T), max_step(OPT.max_step),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
 		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
 	{	
@@ -62,11 +62,12 @@ public:
 			v = V_init * vec/vec_norm;
 		}
 		else if (dist == 'M') {
-			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
-			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
-			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
+			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT,m);
 		}
-		//v = {0.0, -0.00001, 0.0};
+		
+		printf("%f\t %f\t %f\n", v.x, v.y, v.z);
 		Vel = len(v);
 		v_old = v;
 	}
@@ -105,7 +106,7 @@ private:
 	double3 p_interp;
 	double3 v_interp;
 	double3 G;
-	double temp;
+	double KT;
 	double V_init;
 	double Vel = 0.0;
 	const double Lx;
@@ -113,9 +114,8 @@ private:
 	const double Lz;
 	char coll_type = 'W';
 	char dist = 'C';
-	const double t0 = 0.0;
-	const double tf = 0.0;
-	const double t_total = tf - t0;
+	const double t0;
+	const double tf;
 	double t;
 	double t_old;
 	double dt = 0.0;
