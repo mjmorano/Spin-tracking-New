@@ -22,13 +22,15 @@ int main(int argc, char* argv[]) {
 	acc_device_t device_type;
 	device_type = acc_get_device_type();
 	num_devices = acc_get_num_devices(device_type);
-	gpuid = local_rank % num_devices;
+	
+	gpuid = local_rank;
 	acc_set_device_num(gpuid, device_type);
-
+	
+	printf("hello from CPU GlobalRank %d, LocalRank %d, Device %d\n", global_rank, local_rank, gpuid);
 	
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
-	int numParticles = 80 * 64 * 2;
+	int numParticles = 10000;
 
 	char outputFilename[20];
 	sprintf(outputFilename, "data%d.bin", global_rank);
@@ -43,25 +45,28 @@ int main(int argc, char* argv[]) {
    	thread_data = (desprng_individual_t*)malloc(sizeof(desprng_individual_t) * numParticles);
 	process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
 	initialize_common(process_data);
-	
-	#pragma acc parallel loop create(thread_data[:numParticles], nident[:numParticles]) copyin(process_data[:1]), copyout(outputArray[:numParticles*numOutput])
-	for(int n = 0; n<numParticles;n++){
-		nident[n] = (unsigned long)n;	//this is assigning the seed to the RNG
-		particle p(yi, opt, thread_data+n, process_data, n, nident, &outputArray[n*numOutput]);
-		p.run();		
+
+	if(local_rank <= num_devices){
+		#pragma acc parallel loop create(thread_data[:numParticles], nident[:numParticles]) copyin(process_data[:1]), copyout(outputArray[:numParticles*numOutput])
+		for(int n = 0; n<numParticles;n++){
+			nident[n] = (unsigned long)n;	//this is assigning the seed to the RNG
+			particle p(yi, opt, thread_data+n, process_data, n, nident, &outputArray[n*numOutput]);
+			p.run();		
+		}
+		FILE* f = fopen(outputFilename, "wb");
+		fwrite(outputArray, outputSize * numParticles, 1, f);
+		fclose(f);	
 	}
 		
 	auto end = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end - start);
 	cout << "Execution Time: " << duration.count() << " ms\n";
-	FILE* f = fopen(outputFilename, "wb");
-	fwrite(outputArray, outputSize * numParticles, 1, f);
-	fclose(f);	
 
 	free(outputArray);
 	free(nident);
 	free(process_data);
 	free(thread_data);
+	MPI_Finalize();
 	return 0;
 }
 
