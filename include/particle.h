@@ -32,8 +32,8 @@ public:
 		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
 	{	
 		
-		create_identifier(nident);
-		initialize_individual(process_data, thread_data + ipart, nident[0]);
+		create_identifier(nident+ipart);
+		initialize_individual(process_data, thread_data, nident[ipart]);
 		S = y0;
 		outputArray = storage;
 		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;

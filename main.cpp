@@ -15,7 +15,6 @@ int main(int argc, char* argv[]) {
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
 	int numParticles = 1000;
-	int n = numParticles;
 
 	char * outputFilename = "data.bin";
 	
@@ -30,12 +29,11 @@ int main(int argc, char* argv[]) {
 	process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
 	initialize_common(process_data);
 	
-	#pragma acc parallel loop create(thread_data[:n], nident[:n]) copyin(process_data[:1]), copyout(outputArray[:n*numOutput])
+	#pragma acc parallel loop create(thread_data[:numParticles], nident[:numParticles]) copyin(process_data[:1]), copyout(outputArray[:numParticles*numOutput])
 	for(int n = 0; n<numParticles;n++){
-		nident[n] = n;	//this is assigning the seed to the RNG
-		particle p(yi, opt, thread_data, process_data, n, &nident[n], &outputArray[n*numOutput]);
-		p.run();
-		//printf("reached on %d\n", n);
+		nident[n] = (unsigned long)n;	//this is assigning the seed to the RNG
+		particle p(yi, opt, thread_data+n, process_data, n, nident, &outputArray[n*numOutput]);
+		p.run();		
 	}
 		
 	auto end = high_resolution_clock::now();
