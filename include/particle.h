@@ -31,16 +31,18 @@ public:
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
 		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
 	{	
-		
-		create_identifier(nident);
-		initialize_individual(process_data, thread_data + ipart, nident[0]);
+
+		create_identifier(nident+ipart);
+		initialize_individual(process_data, thread_data, nident[ipart]);
+		// printf("%u\n", &thread_data);
 		S = y0;
 		outputArray = storage;
 		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;
 		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Ly-Ly/2.0;
 		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lz-Lz/2.0;
+		// printf("%f\n", pos.x);
+		// printf("%f\n", pos.y);
 		
-		//pos = {0.0, 0.0, 0.0};
 		pos_old = pos;
 		t = t0;
 
@@ -58,16 +60,14 @@ public:
 
 			double vec_norm = len(vec);
 			v = V_init * vec/vec_norm;
-			Vel = len(v);
 		}
 		else if (dist == 'M') {
 			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
 			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
 			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn),temp,m);
-			Vel = len(v);
 		}
 		//v = {0.0, -0.00001, 0.0};
-		Vel = 0.0;
+		Vel = len(v);
 		v_old = v;
 	}
 
@@ -95,8 +95,8 @@ private:
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
-	double m = 1.6e-27;
-	double tc = 1.0;
+	double m;
+	double tc;
 	double3 S;
 	double3 v;
 	double3 v_old;
@@ -116,8 +116,8 @@ private:
 	const double t0 = 0.0;
 	const double tf = 0.0;
 	const double t_total = tf - t0;
-	double t = t0;
-	double t_old = t0;
+	double t;
+	double t_old;
 	double dt = 0.0;
 	double next_gas_coll_time;
 	double dx = 0.0;
