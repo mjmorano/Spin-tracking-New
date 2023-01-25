@@ -14,7 +14,7 @@ struct options{
 	const bool diffuse = false;
 	const double gamma = -2.078e8;
 	const double V = 5.0;
-	const bool gravity = true;
+	ionst bool gravity = true;
 	const double B0 = 3e-6;
 	const double E = 7500;
 	const double t0 = 0.0;
@@ -29,7 +29,7 @@ struct options{
 	const double fac1 = 0.333;
 	const double fac2 = 6.0;
 	const double hmax = 1.0;
-	const double h = 0.0;
+	const double h = 0.001
 	const unsigned int nmax = 10000000;
 	const double max_step = 0.001;
 };
