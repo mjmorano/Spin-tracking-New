@@ -3,9 +3,8 @@
 # CC compiler options:
 CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
 #CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/comm_libs/mpi/bin/mpic++
-CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
-# CC_FLAGS = -O3 -acc -gpu=managed -w -Minfo=accel
-CC_LIBS=
+# CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
+CC_FLAGS = -O3 -acc=gpu -gpu=managed,nonvvm -w -Minfo=accel -std=c++17 -Mcudalib=curand -v
 
 ##########################################################
 
@@ -36,7 +35,7 @@ OBJS = $(OBJ_DIR)/desprng.o $(OBJ_DIR)/des.o $(OBJ_DIR)/dists.o $(OBJ_DIR)/doubl
 
 # Link c++ and CUDA compiled object files to target executable:
 $(EXE) : $(OBJS)
-	$(CC) $(CC_FLAGS) $(OBJS) -o $@ 
+	$(CC) $(OBJS) $(CC_FLAGS) -o $@ 
 
 # Compile main .cpp file to object files:
 $(OBJ_DIR)/%.o : %.cpp

@@ -6,7 +6,8 @@
             "includePath": [
                 "/usr/include",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/include"
+                "${workspaceFolder}/include",
+                "/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/include"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",

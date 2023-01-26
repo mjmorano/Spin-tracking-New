@@ -109,7 +109,7 @@ void particle::calc_next_collision_time() {
 	}
 	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) { //is a gas collision next?
 		dt = next_gas_coll_time - t;
-		next_gas_coll_time += exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn), tc);
+		next_gas_coll_time += exponential(curand_uniform_double(&state), tc);
 		coll_type = 'G';
 		n_coll += 1;
 	}
@@ -143,8 +143,8 @@ void particle::new_velocities() {
 	}
 	else if (coll_type == 'W' && diffuse == true) {
 		//V = sqrt(vx * vx + vy * vy + vz * vz);
-		phi = acos(cbrt(1 - get_uniform_prn(process_data, thread_data, ++icount, &iprn)));
-		theta = 2 * M_PI * get_uniform_prn(process_data, thread_data, ++icount, &iprn);
+		phi = acos(cbrt(1 - curand_uniform_double(&state)));
+		theta = 2 * M_PI * curand_uniform_double(&state);
 		if (wall_hit == 'x') {
 			v.x = -1 * sgn(v.x) * Vel * cos(phi);
 			v.y = -Vel * sin(phi) * cos(theta);
@@ -162,16 +162,16 @@ void particle::new_velocities() {
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+		v.x = curand_normal_double(&state) * sqrtKT_m;
+		v.y = curand_normal_double(&state) * sqrtKT_m;
+		v.z = curand_normal_double(&state) * sqrtKT_m;
 		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
 		double3 vec;
-		vec.x = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-		vec.y = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-		vec.z = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+		vec.x = curand_normal_double(&state);
+		vec.y = curand_normal_double(&state);
+		vec.z = curand_normal_double(&state);
 		double vec_norm = len(vec);
 		v = Vel * vec/vec_norm;
 		Vel = len(v);

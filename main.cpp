@@ -19,17 +19,10 @@ int main(int argc, char* argv[]) {
 	size_t outputSize = numOutput * sizeof(outputDtype);
 	
 	outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles);
-	unsigned long* nident = (unsigned long*)malloc(8 * numParticles);
-	desprng_common_t *process_data;
-    desprng_individual_t *thread_data;
-   	thread_data = (desprng_individual_t*)malloc(sizeof(desprng_individual_t) * numParticles);
-    process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
-	initialize_common(process_data);
 
 	#pragma acc parallel loop
 	for(unsigned int n = 0; n<numParticles;n++){
-		nident[n] = timestamp+n;	//this is assigning the seed to the RNG
-		particle p(yi, opt, thread_data + n, process_data, n, nident, &outputArray[n*numOutput]);
+		particle p(yi, n+timestamp, opt, &outputArray[n*numOutput]);
 		p.run();
 	}
 		
@@ -38,8 +31,5 @@ int main(int argc, char* argv[]) {
 	fclose(f);
 
 	free(outputArray);
-	free(nident);
-	free(process_data);
-	free(thread_data);
 	return 0;
 }

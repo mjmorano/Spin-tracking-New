@@ -2,6 +2,7 @@
 #include <math.h>
 #include <algorithm>
 #include <openacc.h>
+#include "openacc_curand.h"
 #include "DOP853func.h"
 #include "options.h"
 #include "dists.h"
@@ -23,48 +24,47 @@ public:
 	unsigned int lastIndex = 0;
 	outputDtype *outputArray;
 	
-	particle(double3 y0, options OPT, desprng_individual_t* thread_data, desprng_common_t* process_data, unsigned int ipart, unsigned long* nident, outputDtype* storage) :
+	particle(double3 y0, unsigned int seed, options OPT, outputDtype* storage) :
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
 		gravity(OPT.gravity), pos(), KT(k*OPT.T), max_step(OPT.max_step),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
-		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
+		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart)
 	{	
-
-		create_identifier(nident+ipart);
-		initialize_individual(process_data, thread_data, nident[ipart]);
-		// printf("%u\n", &thread_data);
+		
+		curand_init(seed, 0, 0, &state);
 		S = y0;
 		outputArray = storage;
-		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;
-		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Ly-Ly/2.0;
-		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lz-Lz/2.0;
+		pos.x = curand_uniform_double(&state)*Lx-Lx/2.0;
+		pos.y = curand_uniform_double(&state)*Ly-Ly/2.0;
+		pos.z = curand_uniform_double(&state)*Lz-Lz/2.0;
 		// printf("%f\n", pos.x);
 		// printf("%f\n", pos.y);
 		
+		sqrtKT_m = sqrt(KT/m);
 		pos_old = pos;
 		t = t0;
 
 		if (gas_coll == true)
-			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);
+			next_gas_coll_time = exponential(curand_uniform_double(&state), tc);
 		else
 			next_gas_coll_time = tf + 1.0;
 
 		if (dist == 'C') {
 
 			double3 vec;
-			vec.x = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-			vec.y = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-			vec.z = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+			vec.x = curand_normal_double(&state);
+			vec.y = curand_normal_double(&state);
+			vec.z = curand_normal_double(&state);
 
 			double vec_norm = len(vec);
 			v = V_init * vec/vec_norm;
 		}
 		else if (dist == 'M') {
-			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT,m);
+			v.x = curand_normal_double(&state) * sqrtKT_m;
+			v.y = curand_normal_double(&state) * sqrtKT_m;
+			v.z = curand_normal_double(&state) * sqrtKT_m;
 		}
 		
 		// printf("%f\t %f\t %f\n", v.x, v.y, v.z);
@@ -87,9 +87,8 @@ public:
 	void run();
 
 private:
-	desprng_individual_t* thread_data; 
-	desprng_common_t* process_data;
 	options opt;
+	curandState_t state;
 	const bool diffuse;
 	const bool gas_coll;
 	const bool gravity;
@@ -107,6 +106,7 @@ private:
 	double3 v_interp;
 	double3 G;
 	double KT;
+	double sqrtKT_m;
 	double V_init;
 	double Vel = 0.0;
 	const double Lx;
