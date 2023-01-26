@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 	
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
-	int numParticles = 10000;
+	int numParticles = 100000;
 
 	char outputFilename[20];
 	sprintf(outputFilename, "data%d.bin", global_rank);

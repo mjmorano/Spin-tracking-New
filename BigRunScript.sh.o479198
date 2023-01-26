@@ -1,0 +1,132 @@
+---------------------------------------
+Begin PBS Prologue Wed Jan 25 18:37:40 EST 2023
+Job ID:     479198.sched-coc-ice.pace.gatech.edu
+User ID:    dmathews32
+Job name:   BigRunScript.sh
+Queue:      coc-ice-gpu
+End PBS Prologue Wed Jan 25 18:37:40 EST 2023
+---------------------------------------
+atl1-1-01-002-1.pace.gatech.edu-gpu0
+atl1-1-02-011-32.pace.gatech.edu-gpu1
+atl1-1-02-011-32.pace.gatech.edu-gpu0
+atl1-1-02-011-31.pace.gatech.edu-gpu1
+atl1-1-02-011-31.pace.gatech.edu-gpu0
+atl1-1-02-010-36.pace.gatech.edu-gpu1
+atl1-1-02-010-36.pace.gatech.edu-gpu0
+atl1-1-02-010-35.pace.gatech.edu-gpu1
+atl1-1-02-010-35.pace.gatech.edu-gpu0
+atl1-1-02-010-34.pace.gatech.edu-gpu1
+atl1-1-02-010-34.pace.gatech.edu-gpu0
+atl1-1-02-010-33.pace.gatech.edu-gpu1
+atl1-1-02-010-33.pace.gatech.edu-gpu0
+atl1-1-02-010-32.pace.gatech.edu-gpu1
+atl1-1-02-010-32.pace.gatech.edu-gpu0
+atl1-1-02-010-31.pace.gatech.edu-gpu1
+atl1-1-02-010-31.pace.gatech.edu-gpu0
+atl1-1-01-002-8.pace.gatech.edu-gpu3
+atl1-1-01-002-8.pace.gatech.edu-gpu2
+atl1-1-01-002-8.pace.gatech.edu-gpu1
+atl1-1-01-002-8.pace.gatech.edu-gpu0
+atl1-1-01-002-7.pace.gatech.edu-gpu3
+atl1-1-01-002-7.pace.gatech.edu-gpu2
+atl1-1-01-002-7.pace.gatech.edu-gpu1
+atl1-1-01-002-7.pace.gatech.edu-gpu0
+atl1-1-01-002-6.pace.gatech.edu-gpu3
+atl1-1-01-002-6.pace.gatech.edu-gpu2
+atl1-1-01-002-6.pace.gatech.edu-gpu1
+atl1-1-01-002-6.pace.gatech.edu-gpu0
+atl1-1-01-002-5.pace.gatech.edu-gpu3
+atl1-1-01-002-5.pace.gatech.edu-gpu2
+atl1-1-01-002-5.pace.gatech.edu-gpu1
+atl1-1-01-002-5.pace.gatech.edu-gpu0
+atl1-1-01-002-4.pace.gatech.edu-gpu0
+atl1-1-01-002-3.pace.gatech.edu-gpu0
+atl1-1-01-002-2.pace.gatech.edu-gpu0
+
+Lmod is automatically replacing "intel/19.0.5" with "gcc/8.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) mvapich2/2.3.2
+
+
+Lmod is automatically replacing "mvapich2/2.3.2" with "openmpi/4.1.2".
+
+rm -f bin/* *.o run
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/desprng.cpp -o bin/desprng.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/des.cpp -o bin/des.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/dists.cpp -o bin/dists.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/double3.cpp -o bin/double3.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/DOP853func.cpp -o bin/DOP853func.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c src/particle.cpp -o bin/particle.o
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 -c main.cpp -o bin/main.o
+main:
+     49, Generating Multicore code
+         51, #pragma acc loop gang
+mpicxx -O3 -acc=multicore -w -Minfo=accel -std=c++17 bin/desprng.o bin/des.o bin/dists.o bin/double3.o bin/DOP853func.o bin/particle.o bin/main.o -o run 
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+./run: /usr/lib/gcc/x86_64-redhat-linux/4.8.5/../../../../lib64/libstdc++.so.6: version `CXXABI_1.3.9' not found (required by ./run)
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
+
+  Process name: [[51462,1],0]
+  Exit code:    1
+--------------------------------------------------------------------------
+---------------------------------------
+Begin PBS Epilogue Wed Jan 25 18:38:07 EST 2023
+Job ID:     479198.sched-coc-ice.pace.gatech.edu
+User ID:    dmathews32
+Job name:   BigRunScript.sh
+Resources:  walltime=01:00:00,nodes=1,neednodes=1
+Rsrc Used:  cput=00:00:12,vmem=700356kb,walltime=00:00:21,mem=243116kb,energy_used=0
+Queue:      coc-ice-gpu
+Nodes:     
+atl1-1-01-002-1.pace.gatech.edu atl1-1-01-002-2.pace.gatech.edu 
+atl1-1-01-002-3.pace.gatech.edu atl1-1-01-002-4.pace.gatech.edu 
+atl1-1-01-002-5.pace.gatech.edu atl1-1-01-002-6.pace.gatech.edu 
+atl1-1-01-002-7.pace.gatech.edu atl1-1-01-002-8.pace.gatech.edu 
+atl1-1-02-010-31.pace.gatech.edu atl1-1-02-010-32.pace.gatech.edu 
+atl1-1-02-010-33.pace.gatech.edu atl1-1-02-010-34.pace.gatech.edu 
+atl1-1-02-010-35.pace.gatech.edu atl1-1-02-010-36.pace.gatech.edu 
+atl1-1-02-011-31.pace.gatech.edu atl1-1-02-011-32.pace.gatech.edu
+End PBS Epilogue Wed Jan 25 18:38:07 EST 2023
+---------------------------------------

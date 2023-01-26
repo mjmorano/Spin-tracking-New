@@ -1,0 +1,422 @@
+---------------------------------------
+Begin PBS Prologue Wed Jan 25 19:36:49 EST 2023
+Job ID:     479209.sched-coc-ice.pace.gatech.edu
+User ID:    dmathews32
+Job name:   BigRunScript.sh
+Queue:      coc-ice-gpu
+End PBS Prologue Wed Jan 25 19:36:49 EST 2023
+---------------------------------------
+atl1-1-01-002-1.pace.gatech.edu-gpu0
+atl1-1-02-011-32.pace.gatech.edu-gpu1
+atl1-1-02-011-32.pace.gatech.edu-gpu0
+atl1-1-02-011-31.pace.gatech.edu-gpu1
+atl1-1-02-011-31.pace.gatech.edu-gpu0
+atl1-1-02-010-36.pace.gatech.edu-gpu1
+atl1-1-02-010-36.pace.gatech.edu-gpu0
+atl1-1-02-010-35.pace.gatech.edu-gpu1
+atl1-1-02-010-35.pace.gatech.edu-gpu0
+atl1-1-02-010-34.pace.gatech.edu-gpu1
+atl1-1-02-010-34.pace.gatech.edu-gpu0
+atl1-1-02-010-33.pace.gatech.edu-gpu1
+atl1-1-02-010-33.pace.gatech.edu-gpu0
+atl1-1-02-010-32.pace.gatech.edu-gpu1
+atl1-1-02-010-32.pace.gatech.edu-gpu0
+atl1-1-02-010-31.pace.gatech.edu-gpu1
+atl1-1-02-010-31.pace.gatech.edu-gpu0
+atl1-1-01-002-8.pace.gatech.edu-gpu3
+atl1-1-01-002-8.pace.gatech.edu-gpu2
+atl1-1-01-002-8.pace.gatech.edu-gpu1
+atl1-1-01-002-8.pace.gatech.edu-gpu0
+atl1-1-01-002-7.pace.gatech.edu-gpu3
+atl1-1-01-002-7.pace.gatech.edu-gpu2
+atl1-1-01-002-7.pace.gatech.edu-gpu1
+atl1-1-01-002-7.pace.gatech.edu-gpu0
+atl1-1-01-002-6.pace.gatech.edu-gpu3
+atl1-1-01-002-6.pace.gatech.edu-gpu2
+atl1-1-01-002-6.pace.gatech.edu-gpu1
+atl1-1-01-002-6.pace.gatech.edu-gpu0
+atl1-1-01-002-5.pace.gatech.edu-gpu3
+atl1-1-01-002-5.pace.gatech.edu-gpu2
+atl1-1-01-002-5.pace.gatech.edu-gpu1
+atl1-1-01-002-5.pace.gatech.edu-gpu0
+atl1-1-01-002-4.pace.gatech.edu-gpu0
+atl1-1-01-002-3.pace.gatech.edu-gpu0
+atl1-1-01-002-2.pace.gatech.edu-gpu0
+
+Lmod is automatically replacing "intel/19.0.5" with "gcc/8.3.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) mvapich2/2.3.2
+
+
+Lmod is automatically replacing "mvapich2/2.3.2" with "openmpi/4.1.2".
+
+rm -f bin/* *.o run
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/desprng.cpp -o bin/desprng.o
+create_identifier(unsigned long *):
+     41, Generating acc routine seq
+         Generating NVIDIA GPU code
+initialize_individual(desprng_process_variables *, desprng_thread_variables *, unsigned long):
+     66, Generating acc routine seq
+         Generating NVIDIA GPU code
+make_prn(desprng_process_variables *, desprng_thread_variables *, unsigned long, unsigned long *):
+     81, Generating acc routine seq
+         Generating NVIDIA GPU code
+get_uniform_prn(desprng_process_variables *, desprng_thread_variables *, unsigned long, unsigned long *):
+     90, Generating acc routine seq
+         Generating NVIDIA GPU code
+initialize_common(desprng_process_variables *):
+     98, Generating acc routine seq
+         Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/des.cpp -o bin/des.o
+_deskey(desprng_process_variables *, desprng_thread_variables *, unsigned char *):
+     38, Generating acc routine seq
+         Generating NVIDIA GPU code
+_des(desprng_process_variables *, desprng_thread_variables *, unsigned char *, unsigned char *):
+    113, Generating acc routine seq
+         Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/dists.cpp -o bin/dists.o
+approx(double):
+      4, Generating acc routine seq
+         Generating NVIDIA GPU code
+normal01(double):
+     12, Generating acc routine seq
+         Generating NVIDIA GPU code
+maxboltz(double, double, double):
+     19, Generating acc routine seq
+         Generating NVIDIA GPU code
+unif02pi(double):
+     23, Generating acc routine seq
+         Generating NVIDIA GPU code
+exponential(double, double):
+     27, Generating acc routine seq
+         Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/double3.cpp -o bin/double3.o
+asm_abs(double):
+      4, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator +(double3, double3):
+      8, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator +(double3, double):
+     16, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator +(double, double3):
+     24, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator -(double3, double3):
+     28, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator *(double3, double):
+     36, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator *(double, double3):
+     44, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator *(double3, double3):
+     48, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator /(double3, double):
+     56, Generating acc routine seq
+         Generating NVIDIA GPU code
+operator /(double3, double3):
+     63, Generating acc routine seq
+         Generating NVIDIA GPU code
+cross(double3, double3):
+     71, Generating acc routine seq
+         Generating NVIDIA GPU code
+sum(double3):
+     79, Generating acc routine seq
+         Generating NVIDIA GPU code
+len(double3):
+     83, Generating acc routine seq
+         Generating NVIDIA GPU code
+norm(double3):
+     87, Generating acc routine seq
+         Generating NVIDIA GPU code
+fabs3(double3):
+     91, Generating acc routine seq
+         Generating NVIDIA GPU code
+max_d3(double3, double3):
+     99, Generating acc routine seq
+         Generating NVIDIA GPU code
+std::abs(double):
+      2, include "cmath"
+          15, include "cmath"
+               82, Generating implicit acc routine seq
+                   Generating acc routine seq
+                   Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/DOP853func.cpp -o bin/DOP853func.o
+sign(double, double):
+      6, Generating acc routine seq
+         Generating NVIDIA GPU code
+min_d(double, double):
+     11, Generating acc routine seq
+         Generating NVIDIA GPU code
+max_d(double, double):
+     16, Generating acc routine seq
+         Generating NVIDIA GPU code
+pulse(double):
+     20, Generating acc routine seq
+         Generating NVIDIA GPU code
+obs_dense(long, double, double, double3, double3, double3, int *, options, double *, unsigned int *, outputDtype *, double, double3 &, double3 &, double3 &, double3 &, double3 &, double3 &, double3 &, double3 &):
+     27, Generating implicit acc routine seq
+         Generating acc routine seq
+         Generating NVIDIA GPU code
+obs(long, double, double, double3, double3, int *, options, double *, unsigned int *, outputDtype *):
+     64, Generating acc routine seq
+         Generating NVIDIA GPU code
+grad(double3 &, double3 &):
+     90, Generating acc routine seq
+         Generating NVIDIA GPU code
+interpolate(double, double, double, const double3 &, const double3 &, const double3 &, const double3 &, double3 &, double3 &):
+     98, Generating acc routine seq
+         Generating NVIDIA GPU code
+Bloch(double, const double3 &, double3 &, double, double, double, double, const double3 &, const double3 &, const double3 &, const double3 &):
+    106, Generating implicit acc routine seq
+         Generating acc routine seq
+         Generating NVIDIA GPU code
+integrate(double, double, double3 &, const double3 &, const double3 &, const double3 &, const double3 &, options, double &, unsigned int &, outputDtype *):
+    172, Generating acc routine seq
+         Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c src/particle.cpp -o bin/particle.o
+particle::calc_next_collision_time():
+     19, Generating acc routine seq
+         Generating NVIDIA GPU code
+particle::new_velocities():
+    128, Generating acc routine seq
+         Generating NVIDIA GPU code
+particle::move():
+    184, Generating acc routine seq
+         Generating NVIDIA GPU code
+particle::step():
+    203, Generating acc routine seq
+         Generating NVIDIA GPU code
+particle::run():
+    219, Generating acc routine seq
+         Generating NVIDIA GPU code
+double particle::sgn<double>(T1):
+      7, Generating acc routine seq
+         Generating NVIDIA GPU code
+std::initializer_list<double>::initializer_list(const double *, unsigned long):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    60, include "utility"
+                         74, include "initializer_list"
+                              63, Generating implicit acc routine seq
+                                  Generating acc routine seq
+                                  Generating NVIDIA GPU code
+std::initializer_list<double>::size() const:
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    60, include "utility"
+                         74, include "initializer_list"
+                              71, Generating implicit acc routine seq
+                                  Generating acc routine seq
+                                  Generating NVIDIA GPU code
+std::initializer_list<double>::begin() const:
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    60, include "utility"
+                         74, include "initializer_list"
+                              75, Generating implicit acc routine seq
+                                  Generating acc routine seq
+                                  Generating NVIDIA GPU code
+std::initializer_list<double>::end() const:
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    60, include "utility"
+                         74, include "initializer_list"
+                              79, Generating implicit acc routine seq
+                                  Generating acc routine seq
+                                  Generating NVIDIA GPU code
+std::isnan(double):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    62, include "stl_algo.h"
+                         65, include "random"
+                              38, include "cmath"
+                                   15, include "cmath"
+                                       623, Generating implicit acc routine seq
+                                            Generating acc routine seq
+                                            Generating NVIDIA GPU code
+T1 std::min<double>(std::initializer_list<T1>):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    62, include "stl_algo.h"
+                       4222, Generating implicit acc routine seq
+                             Generating acc routine seq
+                             Generating NVIDIA GPU code
+T1 std::max<double>(std::initializer_list<T1>):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    62, include "stl_algo.h"
+                       4232, Generating implicit acc routine seq
+                             Generating acc routine seq
+                             Generating NVIDIA GPU code
+T1 std::min_element<const double *>(T1, T1):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    62, include "stl_algo.h"
+                       6229, Generating implicit acc routine seq
+                             Generating acc routine seq
+                             Generating NVIDIA GPU code
+T1 std::max_element<const double *>(T1, T1):
+      1, include "particle.h"
+           3, include "algorithm"
+               10, include "algorithm"
+                    62, include "stl_algo.h"
+                       6285, Generating implicit acc routine seq
+                             Generating acc routine seq
+                             Generating NVIDIA GPU code
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  -c main.cpp -o bin/main.o
+main:
+     49, Generating copyin(process_data[:1]) [if not already present]
+         Generating implicit copyin(_T34298688_9413) [if not already present]
+         Generating copyout(outputArray[:numOutput*numParticles]) [if not already present]
+         Generating implicit copyin(opt) [if not already present]
+         Generating NVIDIA GPU code
+         51, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
+     49, Local memory used for ..inline,p
+         Generating implicit copyin(yi) [if not already present]
+         Generating create(thread_data[:numParticles]) [if not already present]
+         Generating implicit copyin(..inline,_T34296768_9413,_T34297088_9413,_T34297408_9413,_T34297728_9413,_T34298048_9413,_T34298368_9413) [if not already present]
+         Generating create(nident[:numParticles]) [if not already present]
+         Generating implicit copy(..inline) [if not already present]
+double3::double3():
+      4, include "particle.h"
+           5, include "DOP853func.h"
+                4, include "double3.h"
+                     0, Generating implicit acc routine seq
+                        Generating acc routine seq
+                        Generating NVIDIA GPU code
+particle::particle(double3, options, desprng_thread_variables *, desprng_process_variables *, unsigned int, unsigned long *, outputDtype *):
+      4, include "particle.h"
+NVC++/x86-64 Linux 22.1-0: compilation completed with warnings
+mpicxx -O3 -acc -gpu=managed -w -Minfo=accel -std=c++17  bin/desprng.o bin/des.o bin/dists.o bin/double3.o bin/DOP853func.o bin/particle.o bin/main.o -o run 
+--------------------------------------------------------------------------
+WARNING: No preset parameters were found for the device that Open MPI
+detected:
+
+  Local host:            atl1-1-02-010-32
+  Device name:           mlx5_0
+  Device vendor ID:      0x02c9
+  Device vendor part ID: 4123
+
+Default device parameters will be used, which may result in lower
+performance.  You can edit any of the files specified by the
+btl_openib_device_param_files MCA parameter to set values for your
+device.
+
+NOTE: You can turn off this warning by setting the MCA parameter
+      btl_openib_warn_no_device_params_found to 0.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+WARNING: There was an error initializing an OpenFabrics device.
+
+  Local host:   atl1-1-02-010-34
+  Local device: mlx5_0
+--------------------------------------------------------------------------
+hello from CPU GlobalRank 0, LocalRank 0, Device 0
+hello from CPU GlobalRank 3, LocalRank 0, Device 0
+hello from CPU GlobalRank 2, LocalRank 0, Device 0
+hello from CPU GlobalRank 1, LocalRank 0, Device 0
+hello from CPU GlobalRank 26, LocalRank 0, Device 0
+hello from CPU GlobalRank 25, LocalRank 1, Device 1
+hello from CPU GlobalRank 24, LocalRank 0, Device 0
+hello from CPU GlobalRank 20, LocalRank 0, Device 0
+hello from CPU GlobalRank 21, LocalRank 1, Device 1
+hello from CPU GlobalRank 27, LocalRank 1, Device 1
+hello from CPU GlobalRank 22, LocalRank 0, Device 0
+hello from CPU GlobalRank 23, LocalRank 1, Device 1
+hello from CPU GlobalRank 30, LocalRank 0, Device 0
+hello from CPU GlobalRank 31, LocalRank 1, Device 1
+hello from CPU GlobalRank 28, LocalRank 0, Device 0
+hello from CPU GlobalRank 29, LocalRank 1, Device 1
+hello from CPU GlobalRank 32, LocalRank 0, Device 0
+hello from CPU GlobalRank 33, LocalRank 1, Device 1
+hello from CPU GlobalRank 35, LocalRank 1, Device 1
+hello from CPU GlobalRank 34, LocalRank 0, Device 0
+hello from CPU GlobalRank 17, LocalRank 1, Device 1
+hello from CPU GlobalRank 18, LocalRank 2, Device 2
+hello from CPU GlobalRank 16, LocalRank 0, Device 0
+hello from CPU GlobalRank 19, LocalRank 3, Device 3
+hello from CPU GlobalRank 6, LocalRank 2, Device 2
+hello from CPU GlobalRank 7, LocalRank 3, Device 3
+hello from CPU GlobalRank 5, LocalRank 1, Device 1
+hello from CPU GlobalRank 11, LocalRank 3, Device 3
+hello from CPU GlobalRank 4, LocalRank 0, Device 0
+hello from CPU GlobalRank 9, LocalRank 1, Device 1
+hello from CPU GlobalRank 10, LocalRank 2, Device 2
+hello from CPU GlobalRank 8, LocalRank 0, Device 0
+hello from CPU GlobalRank 12, LocalRank 0, Device 0
+hello from CPU GlobalRank 13, LocalRank 1, Device 1
+hello from CPU GlobalRank 14, LocalRank 2, Device 2
+hello from CPU GlobalRank 15, LocalRank 3, Device 3
+[atl1-1-01-002-1.pace.gatech.edu:255602] 35 more processes have sent help message help-mpi-btl-openib.txt / no device params found
+[atl1-1-01-002-1.pace.gatech.edu:255602] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+[atl1-1-01-002-1.pace.gatech.edu:255602] 35 more processes have sent help message help-mpi-btl-openib.txt / error in device init
+Execution Time: 1089474 ms
+Execution Time: 1094508 ms
+Execution Time: 1094774 ms
+Execution Time: 1096334 ms
+Execution Time: 1097211 ms
+Execution Time: 1097796 ms
+Execution Time: 1098016 ms
+Execution Time: 1098738 ms
+Execution Time: 1098989 ms
+Execution Time: 1099452 ms
+Execution Time: 1101897 ms
+Execution Time: 1102160 ms
+Execution Time: 1102637 ms
+Execution Time: 1102940 ms
+Execution Time: 1103165 ms
+Execution Time: 1103752 ms
+Execution Time: 1103771 ms
+Execution Time: 1104745 ms
+Execution Time: 1105602 ms
+Execution Time: 1105805 ms
+Execution Time: 1107936 ms
+Execution Time: 1108117 ms
+Execution Time: 1108138 ms
+Execution Time: 1109172 ms
+Execution Time: 1109491 ms
+Execution Time: 1110447 ms
+Execution Time: 1108857 ms
+Execution Time: 1111007 ms
+Execution Time: 1111098 ms
+Execution Time: 1111342 ms
+Execution Time: 1114473 ms
+Execution Time: 1113177 ms
+Execution Time: 1115850 ms
+Execution Time: 1113961 ms
+Execution Time: 1117019 ms
+Execution Time: 1228229 ms
+---------------------------------------
+Begin PBS Epilogue Wed Jan 25 19:57:51 EST 2023
+Job ID:     479209.sched-coc-ice.pace.gatech.edu
+User ID:    dmathews32
+Job name:   BigRunScript.sh
+Resources:  walltime=01:00:00,nodes=1,neednodes=1
+Rsrc Used:  cput=11:07:06,vmem=513921320kb,walltime=00:21:00,mem=1338932kb,energy_used=0
+Queue:      coc-ice-gpu
+Nodes:     
+atl1-1-01-002-1.pace.gatech.edu atl1-1-01-002-2.pace.gatech.edu 
+atl1-1-01-002-3.pace.gatech.edu atl1-1-01-002-4.pace.gatech.edu 
+atl1-1-01-002-5.pace.gatech.edu atl1-1-01-002-6.pace.gatech.edu 
+atl1-1-01-002-7.pace.gatech.edu atl1-1-01-002-8.pace.gatech.edu 
+atl1-1-02-010-31.pace.gatech.edu atl1-1-02-010-32.pace.gatech.edu 
+atl1-1-02-010-33.pace.gatech.edu atl1-1-02-010-34.pace.gatech.edu 
+atl1-1-02-010-35.pace.gatech.edu atl1-1-02-010-36.pace.gatech.edu 
+atl1-1-02-011-31.pace.gatech.edu atl1-1-02-011-32.pace.gatech.edu
+End PBS Epilogue Wed Jan 25 19:57:52 EST 2023
+---------------------------------------

@@ -18,12 +18,12 @@ struct options{
 	const double B0 = 3e-6;
 	const double E = 7500;
 	const double t0 = 0.0;
-	const double tf = 10.0;
+	const double tf = 100.0;
 	const double rtol = 1e-12;
 	const double atol = 1e-12;
 	const double beta = 0.0;
 	const int iout = 2;
-	const double ioutInt = 1.0;
+	const double ioutInt = 5.0;
 	const double uround = 1e-16;
 	const double safe = 0.9;
 	const double fac1 = 0.333;
