@@ -204,7 +204,7 @@ void particle::step() {
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	calc_next_collision_time(); //when do we hit something next?
 	move(); //move the particle forward that amount of time
-	//printf("%f %f %f %f\n", t, pos.x, pos.y, pos.z);
+	printf("%f\t %f\t %f\t %f\n", t, pos.x, pos.y, pos.z);
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	new_velocities(); //update the velocity based on the collision type
 	integrate(t_old, t, S, pos_old, pos, v_old, v, opt, lastOutput, lastIndex, outputArray); //integrate the spin along the path

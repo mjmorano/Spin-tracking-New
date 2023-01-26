@@ -4,18 +4,18 @@ const double G_CONST = -9.8;
 const double c2 = 299792458.0 * 299792458.0;
 
 struct options{
-	const double Lx = 1;
-	const double Ly = 1;
-	const double Lz = 1;
+	const double Lx = 0.07;
+	const double Ly = 0.1;
+	const double Lz = 0.4;
 	const char dist = 'C';
-	const double m = 1.6e-27;
-	const bool gas_coll = false;
+	const double m = 2.2*5e-27;
+	const bool gas_coll = true;
 	const double tc = 1e-3;
-	const double T = 4.2;
-	const bool diffuse = false;
+	const double T = 0.4;
+	const bool diffuse = true;
 	const double gamma = -2.078e8;
 	const double V = 5.0;
-	const bool gravity = false;
+	const bool gravity = true;
 	const double B0 = 3e-6;
 	const double E = 1e7;
 	const double t0 = 0.0;

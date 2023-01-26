@@ -86,9 +86,9 @@ double3 norm(const double3 a){
 
 double3 fabs3(const double3 a){
 	double3 out;
-	out.x = fabs(a.x);
-	out.y = fabs(a.y);
-	out.z = fabs(a.z);
+	out.x = std::abs(a.x);
+	out.y = std::abs(a.y);
+	out.z = std::abs(a.z);
 	return out;
 }
 

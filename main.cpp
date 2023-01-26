@@ -1,5 +1,3 @@
-#include <iostream>
-#include <chrono>
 #include <ctime>
 #include "include/particle.h"
 #include "include/options.h"
@@ -7,14 +5,13 @@
 #include <openacc.h>
 
 using namespace std;
-using namespace std::chrono;
 
 int main(int argc, char* argv[]) {
 
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
 	unsigned int timestamp = time(NULL);
-	int numParticles = 10000;
+	int numParticles = 1;
 
 	char * outputFilename = "data.bin";
 	
@@ -46,4 +43,3 @@ int main(int argc, char* argv[]) {
 	free(thread_data);
 	return 0;
 }
-
