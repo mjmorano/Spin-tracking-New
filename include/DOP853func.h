@@ -25,10 +25,13 @@ void grad(double3&, double3&);
 int integrate(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
 	const double3& v_old, const double3& v_new, options OPT,
 	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+
 #pragma acc routine seq
 double sign(double, double);
+
 #pragma acc routine seq
 double min_d(double, double);
+
 #pragma acc routine seq
 double max_d(double, double);
 

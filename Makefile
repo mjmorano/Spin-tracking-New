@@ -4,7 +4,7 @@
 CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
 #CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/comm_libs/mpi/bin/mpic++
 # CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
-CC_FLAGS = -O3 -acc=gpu -gpu=managed -w -Minfo=accel -std=c++17 -Mcudalib=curand
+CC_FLAGS = -O3 -acc=gpu -gpu=managed -w -std=c++17 -Mcudalib=curand
 
 ##########################################################
 
@@ -27,7 +27,7 @@ INC_DIR = include
 EXE = run
 
 # Object files:
-OBJS = $(OBJ_DIR)/desprng.o $(OBJ_DIR)/des.o $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 

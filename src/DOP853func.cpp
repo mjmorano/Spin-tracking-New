@@ -4,22 +4,22 @@
 
 double sign(double a, double b)
 {
-  return (b < 0.0)? -std::abs(a) : std::abs(a);
+  return (b < 0.0) ? -std::abs(a) : std::abs(a);
 }
 
 double min_d(double a, double b)
 {
-  return (a < b)?a:b;
+  return (a < b) ? a : b;
 }
 
 double max_d(double a, double b)
 {
-  return (a > b)?a:b;
+  return (a > b) ? a : b;
 }
 
 double pulse(const double t){
-    // return 19.1026874e-6*cos(3000*t);
-    return 0.0;
+    return 19.1026874e-6*cos(3000*t);
+    // return 0.0;
 }
 
 void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 

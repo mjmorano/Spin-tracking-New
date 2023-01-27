@@ -26,9 +26,9 @@ public:
 		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
-		gravity(OPT.gravity), pos(), KT(k*OPT.T), max_step(OPT.max_step),
+		gravity(OPT.gravity), pos(), sqrtKT_m(sqrt(k*OPT.T/OPT.m)), max_step(OPT.max_step),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
-		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart)
+		gamma(OPT.gamma), G(), opt(OPT)
 	{	
 		
 		curand_init(seed, 0, 0, &state);
@@ -40,7 +40,6 @@ public:
 		// printf("%f\n", pos.x);
 		// printf("%f\n", pos.y);
 		
-		sqrtKT_m = sqrt(KT/m);
 		pos_old = pos;
 		t = t0;
 
@@ -103,7 +102,6 @@ private:
 	double3 p_interp;
 	double3 v_interp;
 	double3 G;
-	double KT;
 	double sqrtKT_m;
 	double V_init;
 	double Vel = 0.0;
@@ -132,8 +130,5 @@ private:
 	double Bz;
 	double B0;
 	double gamma;
-	unsigned int ipart;
-	unsigned int icount = 0;
-	unsigned long iprn;
 	double max_step = 100.0;
 };
