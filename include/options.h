@@ -10,7 +10,7 @@ struct options{
 	const char dist = 'C';
 	const double m = 2.2*5e-27;
 	const bool gas_coll = true;
-	const double tc = 1e-3;
+	const double tc = 1e-4;
 	const double T = 0.4;
 	const bool diffuse = true;
 	const double gamma = -2.078e8;
