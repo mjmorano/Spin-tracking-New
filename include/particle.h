@@ -47,7 +47,7 @@ public:
 		t = t0;
 
 		if (gas_coll == true)
-			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn),tc);
+			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn), tc);
 		else
 			next_gas_coll_time = tf + 1.0;
 
