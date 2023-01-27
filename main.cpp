@@ -1,7 +1,6 @@
 #include <ctime>
 #include "include/particle.h"
 #include "include/options.h"
-#include "include/dists.h"
 #include <openacc.h>
 
 using namespace std;
@@ -11,7 +10,7 @@ int main(int argc, char* argv[]) {
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
 	unsigned int timestamp = time(NULL);
-	int numParticles = 1;
+	int numParticles = 10000;
 
 	char * outputFilename = "data.bin";
 	

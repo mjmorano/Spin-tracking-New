@@ -7,8 +7,6 @@
 #include "options.h"
 #include "dists.h"
 
-// typedef void (*GRAD)(const double* pos, double* G);
-
 class particle
 {
 	const double k = 1.380649e-23;
@@ -73,17 +71,17 @@ public:
 	}
 
 	~particle() {};
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	void calc_next_collision_time();
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	template <typename T> double sgn(T val);
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	void new_velocities();
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	void move();
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	void step();
-	#pragma acc routine seq
+	#pragma acc routine seq nohost
 	void run();
 
 private:

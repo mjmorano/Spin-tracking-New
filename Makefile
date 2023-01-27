@@ -4,7 +4,7 @@
 CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
 #CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/comm_libs/mpi/bin/mpic++
 # CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
-CC_FLAGS = -O3 -acc=gpu -gpu=managed,nonvvm -w -Minfo=accel -std=c++17 -Mcudalib=curand -v
+CC_FLAGS = -O3 -acc=gpu -gpu=managed -w -Minfo=accel -std=c++17 -Mcudalib=curand
 
 ##########################################################
 
