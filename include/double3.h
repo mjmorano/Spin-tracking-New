@@ -13,9 +13,9 @@ struct float3 {
 };
 
 struct outputDtype {
-	float t;
-	float3 x;
-	float3 s;
+	double t;
+	double3 x;
+	double3 s;
 };
 
 #pragma acc routine seq
