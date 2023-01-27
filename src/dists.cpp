@@ -13,11 +13,11 @@ double normal01(const double u){
     if (u < 0.5)
         return -approx( sqrt(-2.0 * log(u) ) );
     else
-        return approx ( sqrt(-2.0 * log(1.0-u) ) );
+        return approx( sqrt(-2.0 * log(1.0-u) ) );
 }
 
-double maxboltz(const double u, const double kT, const double m){
-    return normal01(u) * sqrt(1.0 * kT / m);
+double maxboltz(const double u, const double sqrtkT_m){
+    return normal01(u) * sqrtkT_m;
 }
 
 double unif02pi(const double u){

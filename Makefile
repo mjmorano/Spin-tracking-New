@@ -2,8 +2,8 @@
 
 # CC compiler options:
 CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
-CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
-#CC_FLAGS = -O3 -acc -gpu=managed -w -Minfo=accel
+# CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
+CC_FLAGS = -O3 -acc=gpu -gpu=managed -w -std=c++17
 CC_LIBS=
 
 ##########################################################

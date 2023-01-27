@@ -29,12 +29,16 @@ int main(int argc, char* argv[]) {
     process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
 	initialize_common(process_data);
 
+	auto start = high_resolution_clock::now();
 	#pragma acc parallel loop
 	for(unsigned int n = 0; n<numParticles;n++){
 		nident[n] = timestamp+n;	//this is assigning the seed to the RNG
 		particle p(yi, opt, thread_data + n, process_data, n, nident, &outputArray[n*numOutput]);
 		p.run();
 	}
+	auto end = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(end-start);
+	printf("%d\n", duration);
 		
 	FILE* f = fopen(outputFilename, "wb");
 	fwrite(outputArray, outputSize * numParticles, 1, f);

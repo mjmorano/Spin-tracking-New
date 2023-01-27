@@ -162,9 +162,9 @@ void particle::new_velocities() {
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
-		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), KT, m);
+		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
+		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
+		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
 		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
