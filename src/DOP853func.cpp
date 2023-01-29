@@ -18,8 +18,8 @@ double max_d(double a, double b)
 }
 
 double pulse(const double t){
-    return 19.1026874e-6*cos(3000*t);
-    // return 0.0;
+    // return 19.1026874e-6*cos(3000*t);
+    return 0.0;
 }
 
 void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
@@ -186,7 +186,6 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
     double xf = tf;
     double h = OPT.h;
     unsigned int i;
-    int n = 3;
 
     facold = 1.0E-4;
     expo1 = 1.0/8.0 - OPT.beta * 0.2;
@@ -299,7 +298,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         deno = err + 0.01 * err2;
         if (deno <= 0.0)
 			deno = 1.0;
-        err = std::abs(h) * err * sqrt (1.0 / (deno*(double)n));
+        err = std::abs(h) * err * sqrt (1.0 / (deno*3.0));
 
         /* computation of hnew */
         fac11 = pow (err, expo1);
@@ -388,7 +387,7 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
             {
                 hout=hnew;
                 xout = x;
-                return 1;
+                return nstep;
             }
 
             if (std::abs(hnew) > hmax)

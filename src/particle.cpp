@@ -109,7 +109,7 @@ void particle::calc_next_collision_time() {
 	}
 	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) { //is a gas collision next?
 		dt = next_gas_coll_time - t;
-		next_gas_coll_time += exponential(curand_uniform_double(&state), tc);
+		next_gas_coll_time += - tc * log(1.0 - curand_uniform_double(&state));
 		coll_type = 'G';
 		n_coll += 1;
 	}
@@ -207,7 +207,7 @@ void particle::step() {
 	// printf("%f\t %f\t %f\t %f\n", t, pos.x, pos.y, pos.z);
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	new_velocities(); //update the velocity based on the collision type
-	integrate(t_old, t, S, pos_old, pos, v_old, v, opt, lastOutput, lastIndex, outputArray); //integrate the spin along the path
+	n_int_steps += integrate(t_old, t, S, pos_old, pos, v_old, v, opt, lastOutput, lastIndex, outputArray); //integrate the spin along the path
 	// integrate_step();
 	n_steps += 1;
 }

@@ -5,7 +5,6 @@
 #include "openacc_curand.h"
 #include "DOP853func.h"
 #include "options.h"
-#include "dists.h"
 
 class particle
 {
@@ -16,6 +15,7 @@ public:
 	size_t n_bounce = 0;
 	size_t n_coll = 0;
 	size_t n_steps = 0;
+	size_t n_int_steps = 0;
 	bool finished = false;
 	bool bad = true;
 	double lastOutput = 0.0;
@@ -44,7 +44,7 @@ public:
 		t = t0;
 
 		if (gas_coll == true)
-			next_gas_coll_time = exponential(curand_uniform_double(&state), tc);
+			next_gas_coll_time = - tc * log(1.0 - curand_uniform_double(&state));
 		else
 			next_gas_coll_time = tf + 1.0;
 
@@ -69,7 +69,10 @@ public:
 		v_old = v;
 	}
 
-	~particle() {};
+	~particle() {
+		// printf("%u\n",n_int_steps);
+	};
+
 	#pragma acc routine seq nohost
 	void calc_next_collision_time();
 	#pragma acc routine seq nohost

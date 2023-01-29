@@ -9,10 +9,10 @@ struct options{
 	const double Lz = 0.4;
 	const char dist = 'M';
 	const double m = 2.2*5e-27;
-	const bool gas_coll = false;
-	const double tc = 1e-4;
+	const bool gas_coll = true;
+	const double tc = 1e-3;
 	const double T = 0.4;
-	const bool diffuse = false;
+	const bool diffuse = true;
 	const double gamma = -2.078e8;
 	const double V = 5.0;
 	const bool gravity = true;

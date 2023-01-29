@@ -27,7 +27,7 @@ INC_DIR = include
 EXE = run
 
 # Object files:
-OBJS = $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 
