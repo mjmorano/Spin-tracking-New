@@ -1,38 +1,57 @@
 #include <iostream>
-#include <math.h>
-#include <fstream>
 #include <chrono>
-#include <vector>
-#include <iomanip>
-#include <openacc.h>
-#include "include/test.cuh"
-#include "include/DOP853.h"
+#include <ctime>
 #include "include/particle.h"
 #include "include/options.h"
-
-std::ofstream outfile;
+#include "include/dists.h"
+#include <openacc.h>
 
 using namespace std;
 using namespace std::chrono;
 
-double pulse(double t){
-    // return 64.7775066e-6*cos(10000*t);
-    return 0.0;
+int main(int argc, char* argv[]) {
+
+	double3 yi = {1.0, 0.0, 0.0};
+	options opt;
+	unsigned int timestamp = time(NULL);
+	int numParticles = 10000;
+
+	char * outputFilename = "data.bin";
+	
+	int numOutput = (opt.tf - opt.t0)/opt.ioutInt; 	
+	size_t outputSize = numOutput * sizeof(outputDtype);
+	
+	outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles);
+	unsigned long* nident = (unsigned long*)malloc(8 * numParticles);
+	desprng_common_t *process_data;
+    desprng_individual_t *thread_data;
+   	thread_data = (desprng_individual_t*)malloc(sizeof(desprng_individual_t) * numParticles);
+    process_data = (desprng_common_t*)malloc(sizeof(desprng_common_t));
+	initialize_common(process_data);
+
+	auto start = high_resolution_clock::now();
+	#pragma acc parallel loop
+	for(unsigned int n = 0; n<numParticles;n++){
+		nident[n] = timestamp+n;	//this is assigning the seed to the RNG
+		particle p(yi, opt, thread_data + n, process_data, n, nident, &outputArray[n*numOutput]);
+		p.run();
+	}
+	auto end = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(end-start);
+	printf("%d\n", duration);
+		
+	FILE* f = fopen(outputFilename, "wb");
+	fwrite(outputArray, outputSize * numParticles, 1, f);
+	fclose(f);
+
+	free(outputArray);
+	free(nident);
+	free(process_data);
+	free(thread_data);
+	return 0;
 }
 
-void grad(const vector<double> pos, vector<double>&G){
-    G[0] = 0.0;
-    G[1] = 0.0;
-    G[2] = 0.0;
-}
-
-void solout(long nr, double xold, double x, std::vector<double>& y, unsigned int n, int* irtrn){
-    outfile << setprecision(16);
-    outfile << x << "\t" << y[0] << "\t" << y[1] << "\t" << y[2] << "\n";
-}
-
-int main() {
-
+<<<<<<< HEAD
     outfile.open("/mnt/c/Users/moran/Desktop/dressing.txt");
     std::vector<double> yi = {1.0, 0.0, 0.0};
 	options opt;
@@ -47,3 +66,5 @@ int main() {
     
     outfile.close();
 }
+=======
+>>>>>>> 9334ca70a484b8472bada42828e610c6c36a4618

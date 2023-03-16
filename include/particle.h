@@ -1,15 +1,12 @@
 #pragma once
-#include <vector>
-#include <string>
-#include <random>
 #include <math.h>
 #include <algorithm>
-#include "DOP853.h"
+#include <openacc.h>
+#include "DOP853func.h"
 #include "options.h"
+#include "dists.h"
 
-typedef void (*GRAD)(const std::vector<double> pos, std::vector<double>& G);
-typedef void (*OBS)(long nr, double xold, double x, std::vector<double>& y, unsigned int n, int* irtrn);
-typedef std::function<void(double x, std::vector<double> y, std::vector<double>&f)> FCN;
+// typedef void (*GRAD)(const double* pos, double* G);
 
 class particle
 {
@@ -22,97 +19,94 @@ public:
 	size_t n_steps = 0;
 	bool finished = false;
 	bool bad = true;
-
-	particle(std::function<double(double x)> pulse, GRAD grad, OBS obs, std::vector<double> y0, options OPT) :
-		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), gen(rd()), diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), Temp(OPT.T), gravity(OPT.gravity), pos(3),
-		pos_old(3), v(3), v_old(3), S(y0), Bz(OPT.B0), p_interp(3), v_interp(3), gamma(OPT.gamma), pulse(pulse), grad(grad), G(3),
-		initx(-OPT.Lx/2,OPT.Lx/2), inity(-OPT.Ly/2,OPT.Ly/2), initz(-OPT.Lz/2,OPT.Lz/2), gen_coll_time(1/OPT.tc), gen_max_boltz(0.0,sqrt(k * OPT.T / OPT.m)), gen_norm(0.0,1.0), uni_0_1(0.0,1.0), uni_0_2pi(0.0,2*M_PI),
-		integrator(std::bind(&particle::Bloch,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3), y0, obs, OPT)
+	double lastOutput = 0.0;
+	unsigned int lastIndex = 0;
+	outputDtype *outputArray;
+	
+	particle(double3 y0, options OPT, desprng_individual_t* thread_data, desprng_common_t* process_data, unsigned int ipart, unsigned long* nident, outputDtype* storage) :
+		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
+		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
+		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
+		gravity(OPT.gravity), pos(), sqrtKT_m(sqrt(k*OPT.T/opt.m)), max_step(OPT.max_step),
+		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
+		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
 	{	
-		pos = {initx(gen), inity(gen), initz(gen)};
+
+		create_identifier(nident+ipart);
+		initialize_individual(process_data, thread_data, nident[ipart]);
+		// printf("%u\n", &thread_data);
+		S = y0;
+		outputArray = storage;
+		pos.x = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lx-Lx/2.0;
+		pos.y = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Ly-Ly/2.0;
+		pos.z = get_uniform_prn(process_data, thread_data, ++icount, &iprn)*Lz-Lz/2.0;
+		// printf("%f\n", pos.x);
+		// printf("%f\n", pos.y);
+		
 		pos_old = pos;
-        t = t0;
+		t = t0;
 
 		if (gas_coll == true)
-			next_gas_coll_time = gen_coll_time(gen);
+			next_gas_coll_time = exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn), tc);
 		else
 			next_gas_coll_time = tf + 1.0;
 
 		if (dist == 'C') {
 
-			std::vector<double> vec(3);
-			for (int i = 0; i < 3; i++)
-				vec[i] = gen_norm(gen);
-			double vec_norm = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-			v[0] = V_init * vec[0] / vec_norm;
-			v[1] = V_init * vec[1] / vec_norm;
-			v[2] = V_init * vec[2] / vec_norm;
-			Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+			double3 vec;
+			vec.x = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+			vec.y = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+			vec.z = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+
+			double vec_norm = len(vec);
+			v = V_init * vec/vec_norm;
 		}
 		else if (dist == 'M') {
-			v[0] = gen_max_boltz(gen);
-			v[1] = gen_max_boltz(gen);
-			v[2] = gen_max_boltz(gen);
-			Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+			v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
+			v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
+			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
 		}
-
+		
+		// printf("%f\t %f\t %f\n", v.x, v.y, v.z);
+		Vel = len(v);
 		v_old = v;
-
 	}
 
 	~particle() {};
-
+	#pragma acc routine seq
 	void calc_next_collision_time();
-
-	template <typename T> int sgn(T val);
-
+	#pragma acc routine seq
+	template <typename T> double sgn(T val);
+	#pragma acc routine seq
 	void new_velocities();
-
+	#pragma acc routine seq
 	void move();
-
+	#pragma acc routine seq
 	void step();
-
+	#pragma acc routine seq
 	void run();
 
-	void interpolate(const double ti, std::vector<double>& p_out, std::vector<double>& v_out);
-
-	void integrate_step();
-
-	void integrate_spin();
-
-	void Bloch(const double t, const std::vector<double>& y, std::vector<double>& f);
-
 private:
-
+	desprng_individual_t* thread_data; 
+	desprng_common_t* process_data;
+	options opt;
 	const bool diffuse;
 	const bool gas_coll;
 	const bool gravity;
-	DOP853 integrator;
-	std::function<double(double x)> pulse;
-	GRAD grad;
-	std::random_device rd;
-    std::mt19937 gen;
-    std::uniform_real_distribution<double> initx;
-    std::uniform_real_distribution<double> inity;
-    std::uniform_real_distribution<double> initz;
-    std::exponential_distribution<double> gen_coll_time;
-    std::uniform_real_distribution<double> gen_norm;
-    std::uniform_real_distribution<double> gen_max_boltz;
-    std::uniform_real_distribution<double> uni_0_1;
-    std::uniform_real_distribution<double> uni_0_2pi;
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
-	double m = 1.6e-27;
-	double tc = 1.0;
-	std::vector<double> S;
-	std::vector<double> v;
-	std::vector<double> v_old;
-	std::vector<double> pos;
-	std::vector<double> pos_old;
-	std::vector<double> p_interp;
-	std::vector<double> v_interp;
-	std::vector<double> G;
+	double m;
+	double tc;
+	double3 S;
+	double3 v;
+	double3 v_old;
+	double3 pos;
+	double3 pos_old;
+	double3 p_interp;
+	double3 v_interp;
+	double3 G;
+	double sqrtKT_m;
 	double V_init;
 	double Vel = 0.0;
 	const double Lx;
@@ -120,11 +114,10 @@ private:
 	const double Lz;
 	char coll_type = 'W';
 	char dist = 'C';
-	const double t0 = 0.0;
-	const double tf = 0.0;
-	const double t_total = tf - t0;
-	double t = t0;
-	double t_old = t0;
+	const double t0;
+	const double tf;
+	double t;
+	double t_old;
 	double dt = 0.0;
 	double next_gas_coll_time;
 	double dx = 0.0;
@@ -139,5 +132,10 @@ private:
 	double Bx = 0.0;
 	double By = 0.0;
 	double Bz;
+	double B0;
 	double gamma;
+	unsigned int ipart;
+	unsigned int icount = 0;
+	unsigned long iprn;
+	double max_step = 0.001;
 };
