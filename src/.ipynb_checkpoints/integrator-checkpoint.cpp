@@ -167,7 +167,7 @@ void Bloch(const double t, const double3& y, double3& f, const double B0, const 
 
 // }
 
-int integrate(double t0, double tf, double3& y, const double3& p_old, 
+int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
 		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
 
@@ -410,4 +410,68 @@ int integrate(double t0, double tf, double3& y, const double3& p_old,
         h = hnew;
     }
 
+}
+
+int integrateRK45Rotation(double t0, double tf, double3& y, const double3& p_old, 
+		const double3& p_new, const double3& v_old, const double3& v_new, 
+		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
+	double h = np.float64(OPT['h'])
+	t = t0
+	B0 = np.array([OPT['B0x'], OPT['B0y'], OPT['B0z']])
+	out = False
+	stop = False
+	hmin = 1.0E-9
+	nstep = 0
+	while(1):
+		nstep+=1
+		endOfSimulDt = tf - t #how long until the end of the simulation
+		nextOutputDt = lastOutput + OPT['ioutInt'] - t #how long to the next output time
+		if endOfSimulDt <= nextOutputDt and endOfSimulDt <= h:
+			stop = True
+			h = endOfSimulDt
+		elif nextOutputDt <= endOfSimulDt and nextOutputDt <= h:
+			stop = False
+			out = True
+			h = nextOutputDt
+		elif h <= nextOutputDt and h <= endOfSimulDt:
+			stop = False
+			out = False
+			h = h
+		#with the step size that is desired known, try to compute the step
+		k1 = findCrossTerm(t, y, B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		k2 = findCrossTerm(t+rk45COEF['A2']*h, appCross(y, k1, rk45COEF['B21']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		k3 = findCrossTerm(t+rk45COEF['A3']*h, appCross(appCross(y, k1, rk45COEF['B31']*h), k2, rk45COEF['B32']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		k4 = findCrossTerm(t+rk45COEF['A4']*h, appCross(appCross(appCross(y, k1, rk45COEF['B41']*h), k2, rk45COEF['B42']*h), k3, rk45COEF['B43']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		k5 = findCrossTerm(t+rk45COEF['A5']*h, appCross(appCross(appCross(appCross(y, k1, rk45COEF['B51']*h), k2, rk45COEF['B52']*h), 
+																	   k3, rk45COEF['B53']*h), k4, rk45COEF['B54']), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		k6 = findCrossTerm(t+rk45COEF['A6']*h, appCross(appCross(appCross(appCross(appCross(y, k1, rk45COEF['B61']*h), k2, rk45COEF['B62']*h), 
+																	   k3, rk45COEF['B63']*h), k4, rk45COEF['B64']), k5, rk45COEF['B65']), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
+		weightedStep = appCross(appCross(appCross(appCross(appCross(appCross(
+			y, k1, rk45COEF['CH1']*h), k2, h*rk45COEF['CH2']), k3, h*rk45COEF['CH3']),
+				k4, h*rk45COEF['CH4']), k5, h*rk45COEF['CH5']), k6, h*rk45COEF['CH6'])
+		TE2 = np.identity(3) - rodriguez(k1, rk45COEF['CT1']*h)@rodriguez(k2, rk45COEF['CT2']*h)@rodriguez(k3, rk45COEF['CT3']*h)@\
+			rodriguez(k4, rk45COEF['CT4']*h)@rodriguez(k5, rk45COEF['CT5']*h)@rodriguez(k6, rk45COEF['CT6']*h)
+		TE2 = TE2@y
+		absErr = np.max(np.abs(TE2))
+		if absErr  <= np.float64(OPT['rtol']): #accept the step and move on to the next one
+			t = t + np.float64(h) #what time are we at now
+			y = weightedStep[:] #update the spin for the next iteration
+			if out:
+				a = np.array([0.0, G_CONST, 0.0])
+				outPos = p_old + v_old * (t-t0) + 0.5*a*(t-t0)**2
+				temp = (t, outPos[0], outPos[1], outPos[2], y[0], y[1], y[2])
+				outputArray[lastIndex,:] = temp
+				lastIndex += 1
+				lastOutput += np.float64(OPT['ioutInt'])
+				out = False #now reset this so we don't automatically output it again
+		#now update the time step for the next calculation
+		
+		if absErr < 1.0E-16:
+			absErr = 1.0E-16
+		hnew = 0.9 * h * (OPT['rtol']/absErr)**(1/5)
+		#print(t, absErr, h, hnew, lastOutput, t0, tf)
+		h = hnew
+		if stop:
+			return nstep
+    return 0;
 }

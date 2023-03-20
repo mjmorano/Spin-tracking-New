@@ -22,7 +22,11 @@ void grad(double3&, double3&);
 
 // double hinit(double, double*, double, double*, double*, double*, int, double, double, double);
 #pragma acc routine seq
-int integrate(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
+int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
+	const double3& v_old, const double3& v_new, options OPT,
+	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+#pragma acc routine seq
+int integrateRK5Rotation(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
 	const double3& v_old, const double3& v_new, options OPT,
 	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
 #pragma acc routine seq

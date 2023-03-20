@@ -51,3 +51,37 @@ double3 max_d3(const double3, const double3);
 #pragma acc routine seq
 double3 sgn(const double3);
 
+struct matrix{
+	double xx = 0.0;
+	double xy = 0.0;
+	double xz = 0.0;
+	double yx = 0.0;
+	double yy = 0.0;
+	double yz = 0.0;
+	double zx = 0.0;
+	double zy = 0.0;
+	double zz = 0.0;
+}
+
+#pragma acc routine seq
+matrix operator+(const matrix, const matrix);
+#pragma acc routine seq
+matrix operator+(const matrix, const double);
+#pragma acc routine seq
+matrix operator+(const double, const matrix);
+#pragma acc routine seq
+matrix operator-(const matrix, const matrix);
+#pragma acc routine seq
+matrix operator*(const matrix, const double);
+#pragma acc routine seq
+matrix operator*(const double, const matrix);
+#pragma acc routine seq
+matrix operator*(const matrix, const matrix);
+#pragma acc routine seq
+matrix operator*(const matrix, const double3);
+#pragma acc routine seq
+matrix operator/(const matrix, const double);
+#pragma acc routine seq
+matrix operator/(const matrix, const matrix);
+#pragma acc routine seq
+matrix determineMatrix(const double3);

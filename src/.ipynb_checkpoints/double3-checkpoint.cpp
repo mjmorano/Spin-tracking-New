@@ -104,10 +104,26 @@ template <typename T>
 int sgn (T val){
 	return (T(0) < val) - (val < T(0));
 
-  double3 sgn(const double3 a);
+double3 sgn(const double3 a);
 	double3 out;
 	out.x = sgn(a.x);
 	out.y = sgn(a.y);
 	out.z = sgn(a.z);
 	return out;
 }
+
+
+
+matrix determineMatrix(const double3 a){
+	matrix b = {0.0, a.z, -a.y, 
+				-a.z, 0.0, a.x,
+				a.y, -a.x, 0.0}
+	return b;
+}
+
+matrix operator*(matrix a, matrix b){
+	matrix out;
+	double txx = a.x
+	
+}
+

@@ -170,3 +170,44 @@ namespace COEF
 
 }; 
 
+namespace RK45COEF
+{
+	constexpr double A1 =  0.0;
+    constexpr double A2 = 2.0/9.0;
+    constexpr double A3 = 1.0/3.0;
+    constexpr double A4 = 3.0/4.0;
+    constexpr double A5 = 1.0;
+    constexpr double A6 = 5.0/6.0;
+    constexpr double B21 = 2.0/9.0;
+    constexpr double B31 = 1.0/12.0;
+    constexpr double B32 = 1.0/4.0;
+    constexpr double B41 = 69/128;
+    constexpr double B42 = -243/128;
+    constexpr double B43 = 135/64;
+    constexpr double B51 = -17/12;
+    constexpr double B52 = 27/4;
+    constexpr double B53 = -27/5;
+    constexpr double B54 = 16/15;
+    constexpr double B61 = 65/432;
+    constexpr double B62 = -5/16;
+    constexpr double B63 = 13/16;
+    constexpr double B64 = 4/27;
+    constexpr double B65 = 5/144;
+    constexpr double C1 = 1/9;
+    constexpr double C2 = 0;
+    constexpr double C3 = 9/20;
+    constexpr double C4 = 16/45;
+    constexpr double C5 = 1/12;
+    constexpr double CH1 = 47/450;
+    constexpr double CH2 = 0;
+    constexpr double CH3 = 12/25;
+    constexpr double CH4 = 32/225;
+    constexpr double CH5 = 1/30;
+    constexpr double CH6 = 6/25;
+    constexpr double CT1 = 1/150;
+    constexpr double CT2 = 0;
+    constexpr double CT3 = -3/100;
+    constexpr double CT4 = 16/75;
+    constexpr double CT5 = 1/20;
+    constexpr double CT6 = -6/25;
+}
