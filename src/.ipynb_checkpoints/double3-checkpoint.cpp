@@ -112,8 +112,6 @@ double3 sgn(const double3 a);
 	return out;
 }
 
-
-
 matrix determineMatrix(const double3 a){
 	matrix b = {0.0, a.z, -a.y, 
 				-a.z, 0.0, a.x,
