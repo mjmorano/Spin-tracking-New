@@ -13,12 +13,23 @@ int main(int argc, char* argv[]) {
 
 	double3 yi = {1.0, 0.0, 0.0};
 	options opt;
-	unsigned int timestamp = time(NULL);
-	int numParticles = 10000;
-
-	char * outputFilename = "data.bin";
+	opt.iout = 2;
+	opt.gas_coll = false;
+	opt.rtol = 1.0e-14;
+	opt.t0 = 0.0;
+	opt.tf = 100.0;
+	opt.ioutInt = 0.0005;
+	opt.gravity=true;
+	opt.B0 = {0, 0, 3.0e-6};
+	opt.E = {0, 0, 75.0e5};
+	opt.integratorType = 0;
+	opt.h = opt.ioutInt/2.0; //default to half of the output interval spacing to address a bug
+	char * outputFilename = "../data0.bin";
 	
-	int numOutput = (opt.tf - opt.t0)/opt.ioutInt; 	
+	unsigned int timestamp = time(NULL);
+	int numParticles = 1;
+	
+	int numOutput = (opt.tf - opt.t0)/opt.ioutInt;
 	size_t outputSize = numOutput * sizeof(outputDtype);
 	
 	outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles);
@@ -50,21 +61,3 @@ int main(int argc, char* argv[]) {
 	free(thread_data);
 	return 0;
 }
-
-<<<<<<< HEAD
-    outfile.open("/mnt/c/Users/moran/Desktop/dressing.txt");
-    std::vector<double> yi = {1.0, 0.0, 0.0};
-	options opt;
-    opt.iout = 1;
-    opt.gas_coll = false;
-    opt.rtol = 1e-14;
-    opt.t0 = 0.0;
-    opt.tf = 1.0;
-    opt.B0 = 3e-6;
-    particle p(pulse, grad, solout, yi, opt);
-    p.run();
-    
-    outfile.close();
-}
-=======
->>>>>>> 9334ca70a484b8472bada42828e610c6c36a4618

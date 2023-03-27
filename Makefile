@@ -1,14 +1,10 @@
 ##########################################################
 
 # CC compiler options:
-<<<<<<< HEAD
-CC=pgc++
+CC=g++
 CC_FLAGS= -O3 -m64
-=======
-CC=/opt/nvidia/hpc_sdk/Linux_x86_64/22.11/compilers/bin/pgc++
 # CC_FLAGS= -O3 -acc=multicore -w -Minfo=accel
-CC_FLAGS = -O3 -acc=gpu -gpu=managed -w -std=c++17
->>>>>>> 9334ca70a484b8472bada42828e610c6c36a4618
+CC_FLAGS = -O3 -w -std=c++17
 CC_LIBS=
 
 ##########################################################
@@ -32,7 +28,7 @@ INC_DIR = include
 EXE = run
 
 # Object files:
-OBJS = $(OBJ_DIR)/desprng.o $(OBJ_DIR)/des.o $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/DOP853func.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+OBJS = $(OBJ_DIR)/desprng.o $(OBJ_DIR)/des.o $(OBJ_DIR)/dists.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/integrator.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
 
 ##########################################################
 

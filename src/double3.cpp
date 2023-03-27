@@ -100,11 +100,21 @@ double3 max_d3(const double3 a, const double3 b){
 	return out;
 }
 
-template <typename T>
-int sgn (T val){
-	return (T(0) < val) - (val < T(0));
+double max3(const double3 a){
+	if(a.x >= a.y && a.x >= a.z)
+		return a.x;
+	else if(a.y >= a.x && a.y >= a.z)
+		return a.y;
+	else
+		return a.z;
+}
 
-double3 sgn(const double3 a);
+template <typename T>
+T sgn (T val){
+	return (T(0) < val) - (val < T(0));
+}
+
+double3 sgn(const double3 a){
 	double3 out;
 	out.x = sgn(a.x);
 	out.y = sgn(a.y);
@@ -112,16 +122,41 @@ double3 sgn(const double3 a);
 	return out;
 }
 
-matrix determineMatrix(const double3 a){
-	matrix b = {0.0, a.z, -a.y, 
-				-a.z, 0.0, a.x,
-				a.y, -a.x, 0.0}
-	return b;
+quaternion qConjugate(const quaternion a){
+	quaternion out;
+	out.w = a.w;
+	out.x = -a.x;
+	out.y = -a.y;
+	out.z = -a.z;
+	return out;
 }
 
-matrix operator*(matrix a, matrix b){
-	matrix out;
-	double txx = a.x
-	
+quaternion qMult(const quaternion q1, const quaternion q2){
+	quaternion out;
+	out.w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z;
+	out.x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y;
+	out.y = q1.w * q2.y + q1.y * q2.w + q1.z * q2.x - q1.x * q2.z;
+	out.z = q1.w * q2.z + q1.z * q2.w + q1.x * q2.y - q1.y * q2.x;
+	return out;
 }
 
+double3 qv_mult(const quaternion q1, const double3 v1){
+	double3 out;
+	quaternion q2;
+	q2.x = v1.x;
+	q2.y = v1.y;
+	q2.z = v1.z;
+	q2 = qMult(qMult(q1, q2), qConjugate(q1));
+	out.x = q2.x;
+	out.y = q2.y;
+	out.z = q2.z;
+	return out;
+}
+
+quaternion rodriguezQuat(const double3 k, const double dt){
+	double angle = len(k);
+	double3 norm = k/angle;
+	double h = angle * dt;
+	norm = norm * -sin(h/2.0);
+	return {cos(h/2.0), norm.x, norm.y, norm.z};
+}

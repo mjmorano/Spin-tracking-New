@@ -1,10 +1,12 @@
-#include "../include/DOP853func.h"
+#include "../include/integrator.h"
 #include "../include/options.h"
 #include "../include/coeff.h"
 
+#include <unistd.h>
+
 double sign(double a, double b)
 {
-  return (b < 0.0)? -std::abs(a) : std::abs(a);
+  return (b < 0.0)? -abs(a) : abs(a);
 }
 
 double min_d(double a, double b)
@@ -17,27 +19,30 @@ double max_d(double a, double b)
   return (a > b)?a:b;
 }
 
-double pulse(const double t){
-    // return 19.1026874e-6*cos(3000*t);
-    return 0.0;
+double3 pulse(const double t){
+	// return {19.1026874e-6*cos(3000*t), 0.0, 0.0};
+	return {0.0, 0.0, 0.0};
+}
+
+double3 grad(double3& pos){
+	return {0.0, 0.0, 0.0};
 }
 
 void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray, double hout, double3& rcont1, double3& rcont2, 
         double3& rcont3, double3& rcont4, double3& rcont5, double3& rcont6, double3& rcont7, double3& rcont8){
-	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
-	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
-
-    double s;
-    double s1;
-    double3 dense_out;
+	////("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
+	////("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
+	double s;
+	double s1;
+	double3 dense_out;
 	
 	while(*lastOutput < x){
 		s = (*lastOutput - xold)/hout;
 		s1 = 1.0 - s;
 		dense_out = rcont1+s*(rcont2+s1*(rcont3+s*(rcont4+s1*(rcont5+s*(rcont6+s1*(rcont7+s*rcont8))))));
-		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
-		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
+		////("\t %ld %lf\n", *lastIndex, *lastOutput);
+		////("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
 		double3 a = (double3){0.0, G_CONST, 0.0};
 		double3 outPos = pos_old + v_old * (x-xold) + 0.5*a*(x-xold)*(x-xold);
 		outputDtype temp;
@@ -52,22 +57,16 @@ void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, doubl
 		*lastIndex += 1;
 		*lastOutput += opts.ioutInt;
 	}
-	
-	/*
-	if(x-xold > opts.ioutInt){
-		printf("%f\t %f\t %f\t %f\n", x, y[0], y[1], y[2]);
-	}
-	*/
 }
 
 void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray){
-	//printf("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
-	//printf("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
+	////("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
+	////("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
 	
 	while(*lastOutput < x){
-		//printf("\t %ld %lf\n", *lastIndex, *lastOutput);
-		//printf("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
+		////("\t %ld %lf\n", *lastIndex, *lastOutput);
+		////("%d %d %d %d\n", *lastIndex, *lastIndex+1, *lastIndex+2, *lastIndex+3);
 		outputDtype temp;
 		temp.t = x;
 		temp.x.x = pos.x;
@@ -79,39 +78,33 @@ void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, opt
 		outputArray[*lastIndex] = temp;
 		*lastOutput += opts.ioutInt;
 	}
-	
-	/*
-	if(x-xold > opts.ioutInt){
-		printf("%f\t %f\t %f\t %f\n", x, y[0], y[1], y[2]);
-	}
-	*/
-}
-
-void grad(double3& pos, double3& G){
-    G.x = 0.0;
-    G.y = 0.0;
-    G.z = 0.0;
 }
 
 void interpolate(const double t, const double t0, const double tf, 
 		const double3& p_old, const double3& p_new, const double3& v_old, 
 		const double3& v_new, double3& p_out, double3& v_out){
 	p_out = (p_old*(tf-t) + p_new*(t-t0))/(tf-t0);
-	// printf("%f\t %f\t %f\n", p_old[0], p_out[0], p_new[0]);
+	// //("%f\t %f\t %f\n", p_old[0], p_out[0], p_new[0]);
 	v_out = v_old;
 }
 
-void Bloch(const double t, const double3& y, double3& f, const double B0, const double E,
+double3 findCrossTerm(const double t, const double3 y, const double3 B0, const double3 E, 
+					 const double gamma, const double t0, const double tf, const double3 p_old,
+					 const double3 p_new, const double3 v_old, const double3 v_new){
+	double3 p, v, G;
+	double3 B = pulse(t) + B0;
+	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
+	G = grad(p);
+	B = pulse(t) + B0 + 1.0/c2*cross(v, E);
+	return gamma * B;
+}
+
+void Bloch(const double t, const double3& y, double3& f, const double3 B0, const double3 E,
 			const double gamma, const double t0, const double tf , const double3& p_old,
 			const double3& p_new, const double3& v_old, const double3& v_new){
-    double3 p, v, G;
-    double Bx, By, Bz;
-	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
-	Bx = pulse(t);
-	grad(p,G);
-	double3 B = {Bx+G.x-v.y*E/c2, G.y+v.x*E/c2, B0+G.z};
-	// printf("%f\t %f\t %f\n",Bx,By,Bz);
-	f = gamma * cross(y, B);
+	double3 temp;
+	temp = findCrossTerm(t, y, B0, E, gamma, t0, tf, p_old, p_new, v_old, v_new);
+	f = cross(y, temp);
 }
 
 // double hinit(double x, double* y, double posneg, double* f0, double* f1, double* yy1, int iord, options OPT)
@@ -167,7 +160,7 @@ void Bloch(const double t, const double3& y, double3& f, const double B0, const 
 
 // }
 
-int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old, 
+int integrateDOP(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
 		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
 
@@ -200,9 +193,9 @@ int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old,
     last  = 0;
     hlamb = 0.0;
     iasti = 0;
-	//printf("k1 prior = %lf %lf %lf\n", k1.x, k1.y, k1.z);
+	////("k1 prior = %lf %lf %lf\n", k1.x, k1.y, k1.z);
     Bloch(x, y, k1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
-	//printf("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
+	////("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
 
     double hmax = std::abs(OPT.hmax);
     iord = 8;
@@ -240,9 +233,9 @@ int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old,
         nstep++;
 
         /* the twelve stages */
-		//printf("yy1 = %lf %lf %lf\n", yy1.x, yy1.y, yy1.z);
+		////("yy1 = %lf %lf %lf\n", yy1.x, yy1.y, yy1.z);
         yy1 = y + h * COEF::a21 * k1;
-		//printf("yy12 = %lf %lf %lf\n", yy1.x, yy1.y, yy1.z);
+		////("yy12 = %lf %lf %lf\n", yy1.x, yy1.y, yy1.z);
 
         Bloch(x+COEF::c2*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 		
@@ -412,66 +405,125 @@ int integrateDOPStandard(double t0, double tf, double3& y, const double3& p_old,
 
 }
 
-int integrateRK45Rotation(double t0, double tf, double3& y, const double3& p_old, 
+int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
-		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
-	double h = np.float64(OPT['h'])
-	t = t0
-	B0 = np.array([OPT['B0x'], OPT['B0y'], OPT['B0z']])
-	out = False
-	stop = False
-	hmin = 1.0E-9
-	nstep = 0
-	while(1):
-		nstep+=1
-		endOfSimulDt = tf - t #how long until the end of the simulation
-		nextOutputDt = lastOutput + OPT['ioutInt'] - t #how long to the next output time
-		if endOfSimulDt <= nextOutputDt and endOfSimulDt <= h:
-			stop = True
-			h = endOfSimulDt
-		elif nextOutputDt <= endOfSimulDt and nextOutputDt <= h:
-			stop = False
-			out = True
-			h = nextOutputDt
-		elif h <= nextOutputDt and h <= endOfSimulDt:
-			stop = False
-			out = False
-			h = h
-		#with the step size that is desired known, try to compute the step
-		k1 = findCrossTerm(t, y, B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		k2 = findCrossTerm(t+rk45COEF['A2']*h, appCross(y, k1, rk45COEF['B21']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		k3 = findCrossTerm(t+rk45COEF['A3']*h, appCross(appCross(y, k1, rk45COEF['B31']*h), k2, rk45COEF['B32']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		k4 = findCrossTerm(t+rk45COEF['A4']*h, appCross(appCross(appCross(y, k1, rk45COEF['B41']*h), k2, rk45COEF['B42']*h), k3, rk45COEF['B43']*h), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		k5 = findCrossTerm(t+rk45COEF['A5']*h, appCross(appCross(appCross(appCross(y, k1, rk45COEF['B51']*h), k2, rk45COEF['B52']*h), 
-																	   k3, rk45COEF['B53']*h), k4, rk45COEF['B54']), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		k6 = findCrossTerm(t+rk45COEF['A6']*h, appCross(appCross(appCross(appCross(appCross(y, k1, rk45COEF['B61']*h), k2, rk45COEF['B62']*h), 
-																	   k3, rk45COEF['B63']*h), k4, rk45COEF['B64']), k5, rk45COEF['B65']), B0, OPT['gamma'], t0, tf, p_old, p_new, v_old, v_new)
-		weightedStep = appCross(appCross(appCross(appCross(appCross(appCross(
-			y, k1, rk45COEF['CH1']*h), k2, h*rk45COEF['CH2']), k3, h*rk45COEF['CH3']),
-				k4, h*rk45COEF['CH4']), k5, h*rk45COEF['CH5']), k6, h*rk45COEF['CH6'])
-		TE2 = np.identity(3) - rodriguez(k1, rk45COEF['CT1']*h)@rodriguez(k2, rk45COEF['CT2']*h)@rodriguez(k3, rk45COEF['CT3']*h)@\
-			rodriguez(k4, rk45COEF['CT4']*h)@rodriguez(k5, rk45COEF['CT5']*h)@rodriguez(k6, rk45COEF['CT6']*h)
-		TE2 = TE2@y
-		absErr = np.max(np.abs(TE2))
-		if absErr  <= np.float64(OPT['rtol']): #accept the step and move on to the next one
-			t = t + np.float64(h) #what time are we at now
-			y = weightedStep[:] #update the spin for the next iteration
-			if out:
-				a = np.array([0.0, G_CONST, 0.0])
-				outPos = p_old + v_old * (t-t0) + 0.5*a*(t-t0)**2
-				temp = (t, outPos[0], outPos[1], outPos[2], y[0], y[1], y[2])
-				outputArray[lastIndex,:] = temp
-				lastIndex += 1
-				lastOutput += np.float64(OPT['ioutInt'])
-				out = False #now reset this so we don't automatically output it again
-		#now update the time step for the next calculation
-		
-		if absErr < 1.0E-16:
-			absErr = 1.0E-16
-		hnew = 0.9 * h * (OPT['rtol']/absErr)**(1/5)
-		#print(t, absErr, h, hnew, lastOutput, t0, tf)
-		h = hnew
-		if stop:
-			return nstep
-    return 0;
+		options OPT, double &h, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
+	double x = t0;
+	double xf = tf;
+	bool out = false;
+	bool stop = false;
+	double hmin = 1.0E-9;
+	int nstep = 0;
+	double endOfSimulDt;
+	double nextOutputDt;
+	
+	double3 k1;
+	double3 k2;
+	double3 k3;
+	double3 k4;
+	double3 k5;
+	double3 k6;
+	double3 yy1;
+	double3 TE2;
+	double3 weightedStep;
+	double absErr;
+	double hnew;
+	double3 a = {0.0, 0.0, 0.0};
+	if(OPT.gravity)
+		a.y = G_CONST;
+	while(1){
+		nstep++;
+		endOfSimulDt = xf - x; //how long until the end of the simulation
+		nextOutputDt = lastOutput + OPT.ioutInt - x; //how long to the next output time
+		h = std::min(h, OPT.hmax);
+		h = std::max(h, hmin);
+		if(endOfSimulDt <= nextOutputDt && endOfSimulDt <= h){
+			stop = true;
+			h = endOfSimulDt;
+		}
+		else if(nextOutputDt <= endOfSimulDt && nextOutputDt <= h){
+			stop = false;
+			out = true;
+			h = nextOutputDt;
+		}
+		else if(h <= nextOutputDt && h <= endOfSimulDt){
+			stop = false;
+			out = false;
+			h = h;
+		}
+		//printf("%lf %.10f %lf \n", x, h, lastOutput);
+		//sleep(1);
+		if(h < OPT.swapStepSize){ //in this case we want to use the traditional RK45 methodology
+			//printf("using normal\n");
+			Bloch(x, yy1, k1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = y + h*RK45COEF::B21*k1;
+			Bloch(x+RK45COEF::A2*h, yy1, k2, OPT.B0, OPT.E,OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = y + h*RK45COEF::B31*k1 + h*RK45COEF::B32*k2;
+			Bloch(x+RK45COEF::A3*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = y + h*RK45COEF::B41*k1 + h*RK45COEF::B42*k2 + h*RK45COEF::B43*k3;
+			Bloch(x+RK45COEF::A4*h, yy1, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = y + h*RK45COEF::B51*k1 + h*RK45COEF::B52*k2 + h*RK45COEF::B53*k3 + h*RK45COEF::B54*k4;
+			Bloch(x+RK45COEF::A5*h, yy1, k5, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = y + h*RK45COEF::B61*k1 + h*RK45COEF::B62*k2 + h*RK45COEF::B63*k3 + h*RK45COEF::B64*k4 + h*RK45COEF::B65*k5;
+			Bloch(x+RK45COEF::A6*h, yy1, k6, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			weightedStep = y + h*(k1*RK45COEF::CH1+k2*RK45COEF::CH2+k3*RK45COEF::CH3+k4*RK45COEF::CH4+k5*RK45COEF::CH5+k6*RK45COEF::CH6);
+			TE2 = h*(RK45COEF::CT1*k1 + RK45COEF::CT2*k2 + RK45COEF::CT3*k3 + RK45COEF::CT4*k4 + RK45COEF::CT5*k5 + RK45COEF::CT6*k6);
+			//printf("weightedStep = %lf %lf %lf %lf\n", h, weightedStep.x, weightedStep.y, weightedStep.z);
+		}
+		else{
+			//printf("using rotations\n");
+			k1 = findCrossTerm(x, y, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = qv_mult(rodriguezQuat(k1, RK45COEF::B21*h), y);
+			k2 = findCrossTerm(x+RK45COEF::A2*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = qv_mult(qMult(rodriguezQuat(k2, RK45COEF::B32*h), rodriguezQuat(k1, RK45COEF::B31*h)), y);
+			k3 = findCrossTerm(x+RK45COEF::A3*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = qv_mult(qMult(rodriguezQuat(k3, RK45COEF::B43*h), qMult(rodriguezQuat(k2, RK45COEF::B42*h), rodriguezQuat(k1, RK45COEF::B41*h))), y);
+			k4 = findCrossTerm(x+RK45COEF::A4*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = qv_mult(qMult(rodriguezQuat(k4, RK45COEF::B54*h), qMult(rodriguezQuat(k3, RK45COEF::B53*h), 
+					qMult(rodriguezQuat(k2, RK45COEF::B52*h), rodriguezQuat(k1, RK45COEF::B51*h)))), y);
+			k5 = findCrossTerm(x+RK45COEF::A5*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			yy1 = qv_mult(qMult(rodriguezQuat(k5, RK45COEF::B65*h), qMult(rodriguezQuat(k4, RK45COEF::B64*h), 
+					qMult(rodriguezQuat(k3, RK45COEF::B63*h), qMult(rodriguezQuat(k2, RK45COEF::B62*h), rodriguezQuat(k1, RK45COEF::B61*h))))), y);
+			k6 = findCrossTerm(x+RK45COEF::A6*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			weightedStep = qv_mult(qMult(rodriguezQuat(k6, h*RK45COEF::CH6), qMult(rodriguezQuat(k5, h*RK45COEF::CH5), 
+				qMult(rodriguezQuat(k4, h*RK45COEF::CH4), qMult(rodriguezQuat(k3, h*RK45COEF::CH3),
+				qMult(rodriguezQuat(k2, h*RK45COEF::CH2), rodriguezQuat(k1, h*RK45COEF::CH1)))))), y);
+
+			TE2 = qv_mult(qMult(rodriguezQuat(k5, h*RK45COEF::C5), qMult(rodriguezQuat(k4, h*RK45COEF::C4), 
+								qMult(rodriguezQuat(k3, h*RK45COEF::C3), qMult(rodriguezQuat(k2, h*RK45COEF::C2), 
+									rodriguezQuat(k1, h*RK45COEF::C1))))), y);
+			TE2 = weightedStep - TE2;
+		}
+		absErr = len(TE2);
+		if(absErr  <= OPT.rtol){ //accept the step and move on to the next one
+			x= x + h; //what time are we at now
+			y = weightedStep; //update the spin for the next iteration
+			if(out){
+				//printf("%lf %lf %lf\n", weightedStep.x, weightedStep.y, weightedStep.z);
+				double3 outPos = p_old + v_old * (x-t0) + 0.5*a*(x-t0)*(x-t0);
+				outputDtype temp;
+				temp.t = x;
+				temp.x.x = outPos.x;
+				temp.x.y = outPos.y;
+				temp.x.z = outPos.z;
+				temp.s.x = y.x;
+				temp.s.y = y.y;
+				temp.s.z = y.z;
+				outputArray[lastIndex] = temp;
+				lastIndex += 1;
+				lastOutput += OPT.ioutInt;
+				out = false; //now reset this so we don't automatically output it again
+			}
+		}
+		//now update the time step for the next calculation
+		if(absErr < 1.0E-16)
+			absErr = 1.0E-16;
+		hnew = 0.9 * h * pow(OPT.rtol/absErr, 1.0/5.0);
+		h = hnew;
+		if(stop){
+			//("h = %lf\n", h);
+			return nstep;
+		}
+	}
+	return 0;
 }
