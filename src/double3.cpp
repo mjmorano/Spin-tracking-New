@@ -1,7 +1,16 @@
 #include "../include/double3.h"
-#include <cmath>
+//#include <cmath>
+#include <math.h>
 
-double3 operator+(const double3 a, const double3 b){
+#if(__NVCC__)
+#define __PREPROC__ __host__ __device__
+#elif(__HIPCC__)
+#define __PREPROC__ __host__ __device__
+#else
+#define __PREPROC__
+#endif
+
+__PREPROC__ double3 operator+(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.x + b.x;
 	out.y = a.y + b.y; 
@@ -9,7 +18,7 @@ double3 operator+(const double3 a, const double3 b){
 	return out;
 }
 
-double3 operator+(const double3 a, const double b){
+__PREPROC__ double3 operator+(const double3 a, const double b){
 	double3 out;
 	out.x = a.x + b;
 	out.y = a.y + b;
@@ -17,11 +26,11 @@ double3 operator+(const double3 a, const double b){
 	return out;
 }
 
-double3 operator+(const double a, const double3 b){
+__PREPROC__ double3 operator+(const double a, const double3 b){
 	return b+a;
 }
 
-double3 operator-(const double3 a, const double3 b){
+__PREPROC__ double3 operator-(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.x - b.x;
 	out.y = a.y - b.y;
@@ -29,7 +38,7 @@ double3 operator-(const double3 a, const double3 b){
 	return out;
 }
 
-double3 operator*(const double3 a, const double b){
+__PREPROC__ double3 operator*(const double3 a, const double b){
 	double3 out;
 	out.x = a.x * b;
 	out.y = a.y * b;
@@ -37,11 +46,11 @@ double3 operator*(const double3 a, const double b){
 	return out;
 }
 
-double3 operator*(const double b, const double3 a){
+__PREPROC__ double3 operator*(const double b, const double3 a){
 	return a * b;
 }
 
-double3 operator*(const double3 a, const double3 b){
+__PREPROC__ double3 operator*(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.x * b.x;
 	out.y = a.y * b.y;
@@ -49,14 +58,15 @@ double3 operator*(const double3 a, const double3 b){
 	return out;
 }
 
-double3 operator/(const double3 a, const double b){
+__PREPROC__ double3 operator/(const double3 a, const double b){
 	double3 out;
 	out.x = a.x / b;
 	out.y = a.y / b;
 	out.z = a.z / b;
 	return out;
 }
-double3 operator/(const double3 a, const double3 b){
+
+__PREPROC__ double3 operator/(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.x/b.x;
 	out.y = a.y/b.y;
@@ -64,7 +74,7 @@ double3 operator/(const double3 a, const double3 b){
 	return out;
 }
 
-double3 cross(const double3 a, const double3 b){
+__PREPROC__ double3 cross(const double3 a, const double3 b){
 	double3 out;
 	out.x = a.y*b.z - a.z*b.y;
 	out.y = a.z*b.x - a.x*b.z;
@@ -72,19 +82,19 @@ double3 cross(const double3 a, const double3 b){
 	return out;
 }
 
-double sum(const double3 a){
+__PREPROC__ double sum(const double3 a){
 	return a.x+a.y+a.z;
 }
 
-double len(const double3 a){
+__PREPROC__ double len(const double3 a){
 	return sqrt(a.x*a.x + a.y*a.y + a.z*a.z);
 }
 
-double3 norm(const double3 a){	
+__PREPROC__ double3 norm(const double3 a){	
 	return a/len(a);
 }
 
-double3 fabs3(const double3 a){
+__PREPROC__ double3 fabs3(const double3 a){
 	double3 out;
 	out.x = fabs(a.x);
 	out.y = fabs(a.y);
@@ -92,7 +102,7 @@ double3 fabs3(const double3 a){
 	return out;
 }
 
-double3 max_d3(const double3 a, const double3 b){
+__PREPROC__ double3 max_d3(const double3 a, const double3 b){
 	double3 out;
 	out.x = (a.x>b.x)?a.x:b.x;
 	out.y = (a.y>b.y)?a.y:b.y;
@@ -100,7 +110,7 @@ double3 max_d3(const double3 a, const double3 b){
 	return out;
 }
 
-double max3(const double3 a){
+__PREPROC__ double max3(const double3 a){
 	if(a.x >= a.y && a.x >= a.z)
 		return a.x;
 	else if(a.y >= a.x && a.y >= a.z)
@@ -110,11 +120,11 @@ double max3(const double3 a){
 }
 
 template <typename T>
-T sgn (T val){
+__PREPROC__ T sgn (T val){
 	return (T(0) < val) - (val < T(0));
 }
 
-double3 sgn(const double3 a){
+__PREPROC__ double3 sgn(const double3 a){
 	double3 out;
 	out.x = sgn(a.x);
 	out.y = sgn(a.y);
@@ -122,7 +132,7 @@ double3 sgn(const double3 a){
 	return out;
 }
 
-quaternion qConjugate(const quaternion a){
+__PREPROC__ quaternion qConjugate(const quaternion a){
 	quaternion out;
 	out.w = a.w;
 	out.x = -a.x;
@@ -131,7 +141,7 @@ quaternion qConjugate(const quaternion a){
 	return out;
 }
 
-quaternion qMult(const quaternion q1, const quaternion q2){
+__PREPROC__ quaternion qMult(const quaternion q1, const quaternion q2){
 	quaternion out;
 	out.w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z;
 	out.x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y;
@@ -140,7 +150,7 @@ quaternion qMult(const quaternion q1, const quaternion q2){
 	return out;
 }
 
-double3 qv_mult(const quaternion q1, const double3 v1){
+__PREPROC__ double3 qv_mult(const quaternion q1, const double3 v1){
 	double3 out;
 	quaternion q2;
 	q2.x = v1.x;
@@ -153,7 +163,7 @@ double3 qv_mult(const quaternion q1, const double3 v1){
 	return out;
 }
 
-quaternion rodriguezQuat(const double3 k, const double dt){
+__PREPROC__ quaternion rodriguezQuat(const double3 k, const double dt){
 	double angle = len(k);
 	double3 norm = k/angle;
 	double h = angle * dt;

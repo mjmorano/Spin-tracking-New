@@ -435,6 +435,7 @@ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old,
 		nstep++;
 		endOfSimulDt = xf - x; //how long until the end of the simulation
 		nextOutputDt = lastOutput + OPT.ioutInt - x; //how long to the next output time
+		//printf("h = %.10f, hmax = %.10f, min = %.10f\n", h, OPT.hmax, hmin);
 		h = std::min(h, OPT.hmax);
 		h = std::max(h, hmin);
 		if(endOfSimulDt <= nextOutputDt && endOfSimulDt <= h){
@@ -473,6 +474,7 @@ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old,
 		else{
 			//printf("using rotations\n");
 			k1 = findCrossTerm(x, y, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+			quaternion temp2 = rodriguezQuat(k1, RK45COEF::B21*h);
 			yy1 = qv_mult(rodriguezQuat(k1, RK45COEF::B21*h), y);
 			k2 = findCrossTerm(x+RK45COEF::A2*h, yy1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 			yy1 = qv_mult(qMult(rodriguezQuat(k2, RK45COEF::B32*h), rodriguezQuat(k1, RK45COEF::B31*h)), y);
@@ -488,14 +490,13 @@ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old,
 			weightedStep = qv_mult(qMult(rodriguezQuat(k6, h*RK45COEF::CH6), qMult(rodriguezQuat(k5, h*RK45COEF::CH5), 
 				qMult(rodriguezQuat(k4, h*RK45COEF::CH4), qMult(rodriguezQuat(k3, h*RK45COEF::CH3),
 				qMult(rodriguezQuat(k2, h*RK45COEF::CH2), rodriguezQuat(k1, h*RK45COEF::CH1)))))), y);
-
 			TE2 = qv_mult(qMult(rodriguezQuat(k5, h*RK45COEF::C5), qMult(rodriguezQuat(k4, h*RK45COEF::C4), 
 								qMult(rodriguezQuat(k3, h*RK45COEF::C3), qMult(rodriguezQuat(k2, h*RK45COEF::C2), 
 									rodriguezQuat(k1, h*RK45COEF::C1))))), y);
 			TE2 = weightedStep - TE2;
 		}
 		absErr = len(TE2);
-		if(absErr  <= OPT.rtol){ //accept the step and move on to the next one
+		if(absErr <= OPT.rtol){ //accept the step and move on to the next one
 			x= x + h; //what time are we at now
 			y = weightedStep; //update the spin for the next iteration
 			if(out){

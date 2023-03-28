@@ -1,7 +1,13 @@
 #pragma once
 #include <math.h>
 #include <algorithm>
+
+#if(_OPENMP)
+#include <omp.h>
+#elif(_OPENACC)
 #include <openacc.h>
+#endif
+
 #include "integrator.h"
 #include "options.h"
 #include "dists.h"
