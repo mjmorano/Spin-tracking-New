@@ -4,31 +4,43 @@
 
 #include <unistd.h>
 
-double sign(double a, double b)
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#include <hiprand/hiprand.h>
+#include <hiprand/hiprand_kernel.h>
+#define __PREPROC__ __device__
+#elif __NVCC__
+#define __PREPROC__ __device__
+#else
+#include <random>
+#define __PREPROC__
+#endif
+
+__PREPROC__ double sign(double a, double b)
 {
   return (b < 0.0)? -abs(a) : abs(a);
 }
 
-double min_d(double a, double b)
+__PREPROC__ double min_d(double a, double b)
 {
   return (a < b)?a:b;
 }
 
-double max_d(double a, double b)
+__PREPROC__ double max_d(double a, double b)
 {
   return (a > b)?a:b;
 }
 
-double3 pulse(const double t){
+__PREPROC__ double3 pulse(const double t){
 	// return {19.1026874e-6*cos(3000*t), 0.0, 0.0};
 	return {0.0, 0.0, 0.0};
 }
 
-double3 grad(double3& pos){
+__PREPROC__ double3 grad(double3& pos){
 	return {0.0, 0.0, 0.0};
 }
 
-void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
+__PREPROC__ void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray, double hout, double3& rcont1, double3& rcont2, 
         double3& rcont3, double3& rcont4, double3& rcont5, double3& rcont6, double3& rcont7, double3& rcont8){
 	////("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
@@ -59,7 +71,7 @@ void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, doubl
 	}
 }
 
-void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, options opts, 
+__PREPROC__ void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray){
 	////("%ld %lf %lf %lf %lf\n", nr, x, y.x, y.y, y.z);
 	////("%lf %lf %lf %lf\n", *lastOutput, xold, x, opts.ioutInt);
@@ -80,7 +92,7 @@ void obs(long nr, double xold, double x, double3 y, double3 pos, int* irtrn, opt
 	}
 }
 
-void interpolate(const double t, const double t0, const double tf, 
+__PREPROC__ void interpolate(const double t, const double t0, const double tf, 
 		const double3& p_old, const double3& p_new, const double3& v_old, 
 		const double3& v_new, double3& p_out, double3& v_out){
 	p_out = (p_old*(tf-t) + p_new*(t-t0))/(tf-t0);
@@ -88,7 +100,7 @@ void interpolate(const double t, const double t0, const double tf,
 	v_out = v_old;
 }
 
-double3 findCrossTerm(const double t, const double3 y, const double3 B0, const double3 E, 
+__PREPROC__ double3 findCrossTerm(const double t, const double3 y, const double3 B0, const double3 E, 
 					 const double gamma, const double t0, const double tf, const double3 p_old,
 					 const double3 p_new, const double3 v_old, const double3 v_new){
 	double3 p, v, G;
@@ -99,7 +111,7 @@ double3 findCrossTerm(const double t, const double3 y, const double3 B0, const d
 	return gamma * B;
 }
 
-void Bloch(const double t, const double3& y, double3& f, const double3 B0, const double3 E,
+__PREPROC__ void Bloch(const double t, const double3& y, double3& f, const double3 B0, const double3 E,
 			const double gamma, const double t0, const double tf , const double3& p_old,
 			const double3& p_new, const double3& v_old, const double3& v_new){
 	double3 temp;
@@ -160,7 +172,7 @@ void Bloch(const double t, const double3& y, double3& f, const double3 B0, const
 
 // }
 
-int integrateDOP(double t0, double tf, double3& y, const double3& p_old, 
+__PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
 		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
 
@@ -405,7 +417,7 @@ int integrateDOP(double t0, double tf, double3& y, const double3& p_old,
 
 }
 
-int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, 
+__PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
 		options OPT, double &h, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
 	double x = t0;

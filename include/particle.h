@@ -5,6 +5,12 @@
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
+#if defined(__HIPCC__)
+#include <hip/hip_runtime.h>
+#include <hiprand/hiprand.h>
+#include <hiprand/hiprand_kernel.h>
+#define __PREPROC__ __device__
+#endif
 
 #include <random>
 #include "integrator.h"
@@ -12,12 +18,19 @@
 
 // typedef void (*GRAD)(const double* pos, double* G);
 
+#if defined(__HIPCC__)
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
+#elif defined(__NVCC__)
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
+#else
+void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput);
+#endif
+
 class particle
 {
 	const double k = 1.380649e-23;
 
 public:
-
 	size_t n_bounce = 0;
 	size_t n_coll = 0;
 	size_t n_steps = 0;
@@ -27,7 +40,7 @@ public:
 	unsigned int lastIndex = 0;
 	outputDtype *outputArray;
 	
-	particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart, outputDtype* storage) :
+	__PREPROC__ particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart, outputDtype* storage) :
 		L(OPT.L), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
@@ -38,9 +51,9 @@ public:
 	{
 		// First do the RNG initialization. This will depend heavily on the compiler being used
 		#if defined(__HIPCC__)
-		hiprand_init(seed, ipart, 0, rngState);
+		hiprand_init(seed, ipart, 0, &rngState);
 		#elif defined(__NVCC__)
-		curand_init(seed, ipart, 0, rngState);
+		curand_init(seed, ipart, 0, &rngState);
 		#endif
 		// printf("%u\n", &thread_data);
 		S = y0;
@@ -82,18 +95,18 @@ public:
 		v_old = v;
 	}
 
-	~particle() {};
-	void calc_next_collision_time();
-	template <typename T> double sgn(T val);
-	void new_velocities();
-	void move();
-	void step();
-	void run();
-	double uniform();
-	double normal01();
-	double maxboltz(const double);
-	double unif02pi();
-	double exponential(const double);
+	__PREPROC__ ~particle() {};
+	__PREPROC__ void calc_next_collision_time();
+	template <typename T> __PREPROC__ double sgn(T val);
+	__PREPROC__ void new_velocities();
+	__PREPROC__ void move();
+	__PREPROC__ void step();
+	__PREPROC__ void run();
+	__PREPROC__ double uniform();
+	__PREPROC__ double normal01();
+	__PREPROC__ double maxboltz(const double);
+	__PREPROC__ double unif02pi();
+	__PREPROC__ double exponential(const double);
 
 private:
 	options opt;
@@ -146,7 +159,7 @@ private:
 	//all the various RNG related things
 	unsigned long seed = 0;
 	#if defined(__HIPCC__)
-	hiprandState rngState;
+	hiprandStateXORWOW_t rngState;
 	#elif defined(__NVCC__)
 	curandState rngState;
 	#else

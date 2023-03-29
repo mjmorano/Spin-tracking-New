@@ -2,10 +2,11 @@
 //#include <cmath>
 #include <math.h>
 
-#if(__NVCC__)
+#if defined(__NVCC__)
 #define __PREPROC__ __host__ __device__
-#elif(__HIPCC__)
+#elif defined(__HIPCC__)
 #define __PREPROC__ __host__ __device__
+#include <hip/hip_runtime.h>
 #else
 #define __PREPROC__
 #endif

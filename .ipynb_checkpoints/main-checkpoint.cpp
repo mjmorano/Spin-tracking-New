@@ -4,10 +4,10 @@
 #include "include/particle.h"
 #include "include/options.h"
 
-#ifdef _OPENMP
+#if defined(_OPENMP)
 #include <omp.h>
 #endif
-#ifdef __HIPCC__
+#if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
@@ -17,9 +17,9 @@ using namespace std;
 using namespace std::chrono;
 
 
-void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName);
+void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName, unsigned int seed, double3 yi);
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]){
 
 	options opt;
 	opt.iout = 2;
@@ -40,14 +40,15 @@ int main(int argc, char* argv[]) {
 	int numParticles = 100; //desired number of particles
 	int totalTime = 3600; //total time allowed in seconds
 	char * outputName = "../data"; //the start of the output name, will automatically end in .bin and follow outputName01.bin, outputName02.bin, etc
-	
-	mainAnalysis(opt, numParticles, totalTime, outputName);
+	unsigned int seed = 0;
+	double3 yi = {1.0, 0.0, 0.0};
+	mainAnalysis(opt, numParticles, totalTime, outputName, seed, yi);
 	return 0;
 }
 
 //this functions does the actual analysis and integration
-void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName){
-	#if defined __NVCC__ || defined __HIPCC__
+void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName, unsigned int seed, double3 yi){
+	#if defined(__NVCC__) || defined(__HIPCC__)
 	{
 		//In this case we're going to use the GPU to do mostly everything
 		printf("using the GPU for things\n");
@@ -59,42 +60,45 @@ void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName
 
 		int numOutput = (opt.tf - opt.t0)/opt.ioutInt;
 		size_t outputSize = numOutput * sizeof(outputDtype);
-		double3 yi = {1.0, 0.0, 0.0};
 		
 		outputDtype * outputArrayHost;
 		outputDtype * outputArrayGPU;
 		unsigned long* nident;
-		desprng_common_t *process_data;
-		desprng_individual_t *thread_data;
 		
 		//do the CPU allocation first
 		outputArrayHost  = (outputDtype*)malloc(outputSize * numParticles);
-		#if __NVCC__
+		#if defined(__NVCC__)
 		cudaMalloc(&outputArrayGPU, outputSize*numParticles); //output location
 		curandState *rngStates;
 		cudaMalloc(&rngStates, sizeof(curandState)*numParticles); //allocate one state per particle
+		cudaDeviceSynchronize();
 		#else
 		hipMalloc(&outputArrayGPU, outputSize*numParticles);
 		hiprandStateXORWOW_t *rngStates;
 		hipMalloc(&rngStates, sizeof(hiprandStateXORWOW_t)*numParticles);
+		hipDeviceSynchronize();
 		#endif
 		
-		//first we need to initialize the common data on the device
+		//now actually do the kernel call
+		int numPartsPerBlock = 32;
+		int numBlocks = std::ceil((double)numParticles/(double)numPartsPerBlock);
+		runSimulation<<<numBlocks, numPartsPerBlock>>>(numParticles, outputArrayGPU, rngStates, opt, seed, yi, numOutput);
 		
-		
-		
-		#if __NVCC__
+		#if defined(__NVCC__)
+		cudaDeviceSynchronize();
+		cudaMemcpy(outputArrayHost, outputArrayGPU, outputSize * numParticles, cudaMemcpyDeviceToHost);
+		cudaDeviceSynchronize();
 		cudaFree(outputArrayGPU);
-		cudaFree(nident);
-		cudaFree(process_data);
-		cudaFree(thread_data);
 		#else
+		hipDeviceSynchronize();
+		hipMemcpy(outputArrayHost, outputArrayGPU, outputSize * numParticles, hipMemcpyDeviceToHost);
+		hipDeviceSynchronize();
 		hipFree(outputArrayGPU);
-		hipFree(nident);
-		hipFree(process_data);
-		hipFree(thread_data);
 		#endif
 		
+		FILE* f = fopen(outputName, "wb");
+		fwrite(outputArrayHost, outputSize * numParticles, 1, f);
+		fclose(f);
 		free(outputArrayHost);
 		printf("finishing with the GPU\n");
 	}
@@ -107,17 +111,10 @@ void mainAnalysis(options opt, int numParticles, int totalTime, char* outputName
 
 		int numOutput = (opt.tf - opt.t0)/opt.ioutInt;
 		size_t outputSize = numOutput * sizeof(outputDtype);
-		double3 yi = {1.0, 0.0, 0.0};
 		outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles); //allocate the total output size
-		unsigned long seed = 0;
-		#if defined(_OPENMP)
-		#pragma omp parallel for
-		#endif
-		for(unsigned int n = 0; n<numParticles;n++){
-			//printf("%d\n", omp_get_num_threads());
-			particle p(yi, opt, seed, n, &outputArray[n*numOutput]);
-			p.run();
-		}
+		
+		runSimulation(numParticles, outputArray, opt, seed, yi, numOutput);
+		
 		auto end = high_resolution_clock::now();
 		auto duration = duration_cast<milliseconds>(end-start);
 		//printf("%d\n", (int)duration);

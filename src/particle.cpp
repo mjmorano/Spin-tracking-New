@@ -3,18 +3,50 @@
 Outputs the sign of a number.
 */
 
-#if __HIPCC__
+#if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
-#elif __NVCC__
-
+#define __PREPROC__ __device__
+#elif defined(__NVCC__)
+#define __PREPROC__ __device__
 #else
 #include <random>
+#define __PREPROC__
+#endif
+
+
+#if defined(__HIPCC__)
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
+	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	if(tid < numParticles){
+		particle p(yi, OPT, seed, tid, &outputArray[tid*numOutput]);
+		p.run();
+	}
+}
+#elif defined(__NVCC__)
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
+	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+	if(tid < numParticles){
+		particle p(yi, OPT, seed, tid, &outputArray[tid*numOutput]);
+		p.run();
+	}
+}
+#else
+void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput){
+	#if defined(_OPENMP)
+	#pragma omp parallel for
+	#endif
+	for(unsigned int n = 0; n<numParticles;n++){
+		//printf("%d\n", omp_get_num_threads());
+		particle p(yi, OPT, seed, n, &outputArray[n*numOutput]);
+		p.run();
+	}
+}
 #endif
 
 template <typename T>
-double particle::sgn(T val) {
+__PREPROC__ double particle::sgn(T val) {
 	if(val<0)
 		return -1.0;
 	else
@@ -27,67 +59,67 @@ Calculates the timestep based on the next wall or gas collision.
 */
 
 #if defined(__HIPCC__)
-double particle::uniform(){
-	return hiprand_uniform_double(rngState);
+__PREPROC__ double particle::uniform(){
+	return hiprand_uniform_double(&rngState);
 }
 
-double particle::normal01(){
-	return hiprand_normal_double(rngState);
+__PREPROC__ double particle::normal01(){
+	return hiprand_normal_double(&rngState);
 }
 
-double particle::maxboltz(const double sqrtkT_m){
-    return normal01(rngState) * sqrtkT_m;
-}
-
-double particle::unif02pi(const double u){
-    return hiprand_uniform_double(rngState) * 2.0 * M_PI;
-}
-
-double particle::exponential(const double tc){
-    return - tc * log(1.0 - hiprand_uniform_double(rngState));
-}
-#elif defined(__NVCC__)
-double particle::uniform(){
-	return curand_uniform_double(rngState);
-}
-
-double particle::normal01(){
-	return curand_normal_double(rngState);
-}
-
-double particle::maxboltz(const double sqrtkT_m){
+__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
     return normal01() * sqrtkT_m;
 }
 
-double particle::unif02pi(const double u){
-    return curand_uniform_double(rngState) * 2.0 * M_PI;
+__PREPROC__ double particle::unif02pi(){
+    return hiprand_uniform_double(&rngState) * 2.0 * M_PI;
 }
 
-double particle::exponential(const double tc){
-    return - tc * log(1.0 - curand_uniform_double(rngState));
+__PREPROC__ double particle::exponential(const double tc){
+    return - tc * log(1.0 - hiprand_uniform_double(&rngState));
+}
+#elif defined(__NVCC__)
+__PREPROC__ double particle::uniform(){
+	return curand_uniform_double(&rngState);
+}
+
+__PREPROC__ double particle::normal01(){
+	return curand_normal_double(&rngState);
+}
+
+__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+__PREPROC__ double particle::unif02pi(){
+    return curand_uniform_double(&rngState) * 2.0 * M_PI;
+}
+
+__PREPROC__ double particle::exponential(const double tc){
+    return - tc * log(1.0 - curand_uniform_double(&rngState));
 }
 #else
-double particle::uniform(){
+__PREPROC__ double particle::uniform(){
 	return dist_uniform(gen64);
 }
-double particle::normal01(){
+__PREPROC__ double particle::normal01(){
 	return dist_normal(gen64);
 }
 
-double particle::maxboltz(const double sqrtkT_m){
+__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
     return normal01() * sqrtkT_m;
 }
 
-double particle::unif02pi(){
+__PREPROC__ double particle::unif02pi(){
     return dist_uniform(gen64) * 2.0 * M_PI;
 }
 
-double particle::exponential(const double tc){
+__PREPROC__ double particle::exponential(const double tc){
     return - tc * log(1.0 - dist_uniform(gen64));
 }
 #endif
 
-void particle::calc_next_collision_time() {
+__PREPROC__ void particle::calc_next_collision_time() {
 	if(gravity){
 		//calculate distance to collision point
 		dx = sgn(v.x) * L.x / 2.0 - pos.x;
@@ -196,7 +228,7 @@ void particle::calc_next_collision_time() {
 Calculates the new velocities after a wall or gas collision.
 */
 
-void particle::new_velocities() {
+__PREPROC__ void particle::new_velocities() {
 	v_old = v;
 	Vel = len(v);
 	//printf("%c\n", coll_type);
@@ -252,7 +284,7 @@ void particle::new_velocities() {
 /*
 Moves the particle based on the particle velocity and calcuated timestep.
 */
-void particle::move() {
+__PREPROC__ void particle::move() {
 	t_old = t; // update the time
 	t += dt; //increment forward
 	pos_old = pos; //update old position
@@ -271,7 +303,7 @@ void particle::move() {
 Performs one particle and spin integration step.
 */
 
-void particle::step() {
+__PREPROC__ void particle::step() {
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	calc_next_collision_time(); //when do we hit something next?
 	move(); //move the particle forward that amount of time
@@ -298,7 +330,7 @@ void particle::step() {
 Convenience function that calls the step() function repeatedL.y until the end time is reached.
 */
 
-void particle::run() {
+__PREPROC__ void particle::run() {
 	while (finished != true) {
 		step();
 	}
