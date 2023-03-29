@@ -6,8 +6,6 @@
 #include "options.h"
 #include "dists.h"
 
-// typedef void (*GRAD)(const double* pos, double* G);
-
 class particle
 {
 	const double k = 1.380649e-23;
@@ -22,14 +20,15 @@ public:
 	double lastOutput = 0.0;
 	unsigned int lastIndex = 0;
 	outputDtype *outputArray;
+	unsigned int max_index;
 	
 	particle(double3 y0, options OPT, desprng_individual_t* thread_data, desprng_common_t* process_data, unsigned int ipart, unsigned long* nident, outputDtype* storage) :
-		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(OPT.tc), 
+		Lx(OPT.Lx), Ly(OPT.Ly), Lz(OPT.Lz), m(OPT.m), tc(1.6e-4*m/(k*pow(OPT.T,8))), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
 		gravity(OPT.gravity), pos(), sqrtKT_m(sqrt(k*OPT.T/opt.m)), max_step(OPT.max_step),
 		pos_old(), v(), v_old(), Bz(OPT.B0), B0(OPT.B0), p_interp(), v_interp(), 
-		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data) 
+		gamma(OPT.gamma), G(), opt(OPT), ipart(ipart), thread_data(thread_data), process_data(process_data), max_index((OPT.tf - OPT.t0)/OPT.ioutInt)
 	{	
 
 		create_identifier(nident+ipart);
@@ -67,7 +66,7 @@ public:
 			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
 		}
 		
-		// printf("%f\t %f\t %f\n", v.x, v.y, v.z);
+		printf("%f\n", tc);
 		Vel = len(v);
 		v_old = v;
 	}
