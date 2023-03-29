@@ -14,7 +14,6 @@ struct float3 {
 
 struct outputDtype {
 	double t;
-	double3 x;
 	double3 s;
 };
 

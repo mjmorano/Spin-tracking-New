@@ -4,13 +4,13 @@ const double G_CONST = -9.8;
 const double c2 = 299792458.0 * 299792458.0;
 
 struct options{
-	const double Lx = 0.5;
-	const double Ly = 0.5;
-	const double Lz = 0.5;
+	const double Lx = 0.396;
+	const double Ly = 0.103;
+	const double Lz = 0.076;
 	char dist = 'M';
 	double m = 2.2*5.00823452e-27;
-	bool gas_coll = false;
-	const double T = 0.3;
+	bool gas_coll = true;
+	const double T = 0.4;
 	bool diffuse = true;
 	double gamma = -2.037894569e8;
 	double V = 5.0;
@@ -18,7 +18,7 @@ struct options{
 	const double B0 = 3e-6;
 	const double E = 0.0;
 	const double t0 = 0.0;
-	const double tf = 100.0;
+	const double tf = 1000.0;
 	const double rtol = 1e-12;
 	const double atol = 1e-12;
 	const double beta = 0.0;

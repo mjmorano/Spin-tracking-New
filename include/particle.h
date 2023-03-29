@@ -66,7 +66,7 @@ public:
 			v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
 		}
 		
-		// printf("%f\n", tc);
+		// printf("%f\t %f\t %f\t %f\n", tc, v.x, v.y, v.z);
 		Vel = len(v);
 		v_old = v;
 	}
