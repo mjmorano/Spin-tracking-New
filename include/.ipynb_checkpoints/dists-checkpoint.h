@@ -1,38 +1,27 @@
 #include <math.h>
 #include <cmath>
-#include "../include/desprng.h"
 
-#if(_OPENMP)
-#pragma omp declare target
-#elif(_OPENACC)
-#pragma acc routine seq
-#endif
-double approx(const double t);
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#include <hiprand/hiprand.h>
+#include <hiprand/hiprand_kernel.h>
+#elif __NVCC__
 
-#if(_OPENMP)
-#pragma omp declare target
-#elif(_OPENACC)
-#pragma acc routine seq
+#else
+#include <random>
 #endif
-double normal01(const double u);
 
-#if(_OPENMP)
-#pragma omp declare target
-#elif(_OPENACC)
-#pragma acc routine seq
-#endif
-double maxboltz(const double u, const double sqrtkT_m);
+#if __HIPCC__
+double normal01(hiprandState* t);
+double maxboltz(hiprandState * t, const double sqrtkT_m);
+double unif02pi(hiprandState* t, const double u);
+double exponential(hiprandState* t, const double tc);
+#elif __NVCC__
 
-#if(_OPENMP)
-#pragma omp declare target
-#elif(_OPENACC)
-#pragma acc routine seq
-#endif
-double unif02pi(const double u);
+#else
+double normal01(std::normal_distribution<double> dist, std::mt19937_64 gen);
+double maxboltz(std::normal_distribution<double> dist, std::mt19937_64 gen, const double sqrtkT_m);
+double unif02pi(std::uniform_distribution<double> dist, std::mt19937_64 gen);
+double exponential(std::uniform_distribution<double> dist, std::mt19937_64 gen, const double tc);
 
-#if(_OPENMP)
-#pragma omp declare target
-#elif(_OPENACC)
-#pragma acc routine seq
 #endif
-double exponential(const double u, const double tc);

@@ -4,10 +4,9 @@
 #define __PREPROC__ __host__ __device__
 #elif(__HIPCC__)
 #define __PREPROC__ __host__ __device__
+#include <hip/hip_runtime.h>
 #else
 #define __PREPROC__
-#endif
-
 struct double3 {
 	double x = 0.0;
 	double y = 0.0;
@@ -19,6 +18,9 @@ struct float3 {
 	float y = 0.0f;
 	float z = 0.0f;
 };
+#endif
+
+//note that both AMD and NVIDIA include definitions of the double3 and float3 structures so only when we aren't using those do we need to define them
 
 struct outputDtype {
 	double t = 0.0;

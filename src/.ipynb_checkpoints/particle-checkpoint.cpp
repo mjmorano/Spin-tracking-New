@@ -3,6 +3,16 @@
 Outputs the sign of a number.
 */
 
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#include <hiprand/hiprand.h>
+#include <hiprand/hiprand_kernel.h>
+#elif __NVCC__
+
+#else
+#include <random>
+#endif
+
 template <typename T>
 double particle::sgn(T val) {
 	if(val<0)
@@ -15,6 +25,67 @@ double particle::sgn(T val) {
 /*
 Calculates the timestep based on the next wall or gas collision.
 */
+
+#if defined(__HIPCC__)
+double particle::uniform(){
+	return hiprand_uniform_double(rngState);
+}
+
+double particle::normal01(){
+	return hiprand_normal_double(rngState);
+}
+
+double particle::maxboltz(const double sqrtkT_m){
+    return normal01(rngState) * sqrtkT_m;
+}
+
+double particle::unif02pi(const double u){
+    return hiprand_uniform_double(rngState) * 2.0 * M_PI;
+}
+
+double particle::exponential(const double tc){
+    return - tc * log(1.0 - hiprand_uniform_double(rngState));
+}
+#elif defined(__NVCC__)
+double particle::uniform(){
+	return curand_uniform_double(rngState);
+}
+
+double particle::normal01(){
+	return curand_normal_double(rngState);
+}
+
+double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+double particle::unif02pi(const double u){
+    return curand_uniform_double(rngState) * 2.0 * M_PI;
+}
+
+double particle::exponential(const double tc){
+    return - tc * log(1.0 - curand_uniform_double(rngState));
+}
+#else
+double particle::uniform(){
+	return dist_uniform(gen64);
+}
+double particle::normal01(){
+	return dist_normal(gen64);
+}
+
+double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+double particle::unif02pi(){
+    return dist_uniform(gen64) * 2.0 * M_PI;
+}
+
+double particle::exponential(const double tc){
+    return - tc * log(1.0 - dist_uniform(gen64));
+}
+#endif
 
 void particle::calc_next_collision_time() {
 	if(gravity){
@@ -59,7 +130,7 @@ void particle::calc_next_collision_time() {
 			dtz = 1e6;
 		//printf("pos = %f, %f, %f, vel = %f %f %f, dt = %f %f %f\n", pos.x, pos.y, pos.z, v.x, v.y, v.z, dtx, dty, dtz);
 	}
-	else{	
+	else{
 		
 		dx = sgn(v.x) * L.x / 2.0 - pos.x;
 		dy = sgn(v.y) * L.y / 2.0 - pos.y;
@@ -109,7 +180,7 @@ void particle::calc_next_collision_time() {
 	}
 	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) { //is a gas collision next?
 		dt = next_gas_coll_time - t;
-		next_gas_coll_time += exponential(get_uniform_prn(process_data, thread_data, ++icount, &iprn), tc);
+		next_gas_coll_time += exponential(tc);
 		coll_type = 'G';
 		n_coll += 1;
 	}
@@ -143,8 +214,8 @@ void particle::new_velocities() {
 	}
 	else if (coll_type == 'W' && diffuse == true) {
 		//V = sqrt(vx * vx + vy * vy + vz * vz);
-		phi = acos(cbrt(1 - get_uniform_prn(process_data, thread_data, ++icount, &iprn)));
-		theta = 2 * M_PI * get_uniform_prn(process_data, thread_data, ++icount, &iprn);
+		phi = acos(cbrt(1.0 - uniform()));
+		theta = unif02pi();
 		if (wall_hit == 'x') {
 			v.x = -1 * sgn(v.x) * Vel * cos(phi);
 			v.y = -Vel * sin(phi) * cos(theta);
@@ -162,16 +233,16 @@ void particle::new_velocities() {
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v.x = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
-		v.y = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
-		v.z = maxboltz(get_uniform_prn(process_data, thread_data, ++icount, &iprn), sqrtKT_m);
+		v.x = maxboltz(sqrtKT_m);
+		v.y = maxboltz(sqrtKT_m);
+		v.z = maxboltz(sqrtKT_m);
 		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
 		double3 vec;
-		vec.x = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-		vec.y = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
-		vec.z = normal01(get_uniform_prn(process_data, thread_data, ++icount, &iprn));
+		vec.x = normal01();
+		vec.y = normal01();
+		vec.z = normal01();
 		double vec_norm = len(vec);
 		v = Vel * vec/vec_norm;
 		Vel = len(v);
@@ -231,5 +302,4 @@ void particle::run() {
 	while (finished != true) {
 		step();
 	}
-	// printf("%f\t %f\t %f\n", S[0], S[1], S[2]);
 }

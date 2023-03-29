@@ -1,29 +1,54 @@
+#pragma once
+
 #include "../include/dists.h"
 
-double approx(const double t)
-{
-    // Abramowitz and Stegun formula 26.2.23.
-    // The absolute value of the error should be less than 4.5 e-4.
-    double c[] = {2.515517, 0.802853, 0.010328};
-    double d[] = {1.432788, 0.189269, 0.001308};
-    return t - ((c[2]*t + c[1])*t + c[0]) / (((d[2]*t + d[1])*t + d[0])*t + 1.0);
+#if __HIPCC__
+#include <hip/hip_runtime.h>
+#include <hiprand/hiprand.h>
+#include <hiprand/hiprand_kernel.h>
+#elif __NVCC__
+
+#else
+#include <random>
+#endif
+
+#if defined(__HIPCC__)
+double normal01(hiprandState* t){
+	return hiprand_normal_double(t);
 }
 
-double normal01(const double u){
-    if (u < 0.5)
-        return -approx( sqrt(-2.0 * log(u) ) );
-    else
-        return approx( sqrt(-2.0 * log(1.0-u) ) );
+double maxboltz(hiprandState * t, const double sqrtkT_m){
+    return normal01(t) * sqrtkT_m;
 }
 
-double maxboltz(const double u, const double sqrtkT_m){
-    return normal01(u) * sqrtkT_m;
+double unif02pi(hiprandState* t, const double u){
+    return hiprand_uniform_double(t) * 2.0 * M_PI;
 }
 
-double unif02pi(const double u){
-    return u * 2.0 * M_PI;
+double exponential(hiprandState* t, const double tc){
+    return - tc * log(1.0 - hiprand_uniform_double(t));
 }
 
-double exponential(const double u, const double tc){
-    return - tc * log(1.0 - u);
+#elif defined(__NVCC__)
+
+#else
+double normal01(std::normal_distribution<double> dist, std::mt19937_64 gen){
+	return dist(gen);
 }
+
+double maxboltz(std::normal_distribution<double> dist, std::mt19937_64 gen, const double sqrtkT_m){
+    return normal01(dist, gen) * sqrtkT_m;
+}
+
+double unif02pi(std::uniform_distribution<double> dist, std::mt19937_64 gen){
+    return dist(gen) * 2.0 * M_PI;
+}
+
+double exponential(std::uniform_distribution<double> dist, std::mt19937_64 gen, const double tc){
+    return - tc * log(1.0 - dist(gen));
+}
+
+#endif
+
+
+
