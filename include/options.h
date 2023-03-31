@@ -35,4 +35,6 @@ struct options{
 	unsigned int nmax = 10000000;
 	int integratorType = 0; //0 means DOP853, 1 means hybrid RK45 approach
 	double swapStepSize = 1.0-4; //above this use rotations, below this use standard RK techniques
+	int numParticles = 1000;
+	int numPerGPUBlock = 128;
 };
