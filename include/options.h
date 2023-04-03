@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __OPTIONS_H_DEFINED__
+#define __OPTIONS_H_DEFINED__
 
 #include "double3.h"
 
@@ -38,3 +39,5 @@ struct options{
 	int numParticles = 1000;
 	int numPerGPUBlock = 128;
 };
+
+#endif

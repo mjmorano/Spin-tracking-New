@@ -1,16 +1,20 @@
 #pragma once
 #include <stdio.h>
 #include <cmath>
+#include <math.h>
 #include "../include/double3.h"
 #include "../include/options.h"
 #include "../include/coeff.h"
 
-#if __HIPCC__
+#if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
 #define __PREPROC__ __device__
-#elif __NVCC__
+#elif defined(__NVCOMPILER)
+#include <cuda_runtime.h>
+#include <curand.h>
+#include <curand_kernel.h>
 #define __PREPROC__ __device__
 #else
 #include <random>

@@ -1,7 +1,9 @@
-#pragma once
+#ifndef __DOUBLE3_H_INCLUDED__
+#define __DOUBLE3_H_INCLUDED__
 
-#if(__NVCC__)
+#if(__NVCOMPILER)
 #define __PREPROC__ __host__ __device__
+#include <cuda_runtime.h>
 #elif(__HIPCC__)
 #define __PREPROC__ __host__ __device__
 #include <hip/hip_runtime.h>
@@ -58,3 +60,5 @@ __PREPROC__ quaternion conjugate(const quaternion);
 __PREPROC__ quaternion qMult(const quaternion, const quaternion);
 __PREPROC__ double3 qv_mult(const quaternion, const double3);
 __PREPROC__ quaternion rodriguezQuat(const double3, const double);
+
+#endif

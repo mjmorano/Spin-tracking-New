@@ -1,27 +1,29 @@
-#pragma once
+#ifndef __PARTICLE_H_DEFINED__
+#define __PARTICLE_H_DEFINED__
+
 #include <math.h>
 #include <algorithm>
+#include <random>
 
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 #if defined(__HIPCC__)
-#include <hip/hip_runtime.h>
-#include <hiprand/hiprand.h>
-#include <hiprand/hiprand_kernel.h>
+#define __PREPROC__ __device__
+#elif defined(__NVCOMPILER)
 #define __PREPROC__ __device__
 #endif
 
-#include <random>
 #include "integrator.h"
 #include "options.h"
+#include "double3.h"
 
 // typedef void (*GRAD)(const double* pos, double* G);
 
 #if defined(__HIPCC__)
 __global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
-#elif defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
+#elif defined(__NVCOMPILER)
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
 #else
 void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput);
 #endif
@@ -52,7 +54,7 @@ public:
 		// First do the RNG initialization. This will depend heavily on the compiler being used
 		#if defined(__HIPCC__)
 		hiprand_init(seed, ipart, 0, &rngState);
-		#elif defined(__NVCC__)
+		#elif defined(__NVCOMPILER)
 		curand_init(seed, ipart, 0, &rngState);
 		#endif
 		// printf("%u\n", &thread_data);
@@ -160,7 +162,7 @@ private:
 	unsigned long seed = 0;
 	#if defined(__HIPCC__)
 	hiprandStateXORWOW_t rngState;
-	#elif defined(__NVCC__)
+	#elif defined(__NVCOMPILER)
 	curandState rngState;
 	#else
 	std::random_device dev;
@@ -169,3 +171,5 @@ private:
 	std::uniform_real_distribution<double> dist_uniform{0.0, 1.0};
 	#endif
 };
+
+#endif

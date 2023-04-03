@@ -1,55 +1,43 @@
-##########################################################
-
+vpath %.cpp src/
+vpath %.h include/
 # CC compiler options:
 
-CC = /opt/rocm-5.2.5/bin/hipcc
-#CC = g++
+#CC = g++ #uncomment for CPU
+#CC = /opt/rocm-5.2.5/bin/hipcc
+CC = /usr/local/cuda-11.8/bin/nvcc #uncomment for Nvidia
+#CC_FLAGS= -g -w -O3 -std=c++17 -fPIC -fopenmp #uncommend for openmp
+SM=86
+GENCODE_FLAGS = -gencode arch=compute_$(SM),code=compute_$(SM)
+CC_FLAGS= -g -w -O3 -std=c++17 -rdc=true -cudart=shared $(GENCODE_FLAGS)
+#GPUCC_FLAGS= $(CC_FLAGS) -fgpu-rdc
 
-CC_FLAGS = -g -w -O3 -std=c++17 -fgpu-rdc -L/opt/rocm-5.2.5/hiprand/lib
-#CC_FLAGS = -O3 -w -std=c++17 -fopenmp
-
-##########################################################
-
+#INCLUDES = $(BASEGPUPATH)hiprand/lib
+BASEGPUPATH = /opt/nvidia/hpc_sdk/Linux_x86_64/22.11
+CC_INCLUDES = -I$(BASEGPUPATH)/math_libs/include
+LIBRARY_PATH = -L$(BASEGPUPATH)/math_libs/lib64 -L$(BASEGPUPATH)/cuda/lib64
+LIBRARIES = -lcudart -lcurand
 ## Project file structure ##
 
-# Source file directory:
-SRC_DIR = src
 
-# Object file directory:
-OBJ_DIR = bin
+MAIN = main
+SOURCES = double3.cpp optionsParser.cpp integrator.cpp particle.cpp simulation.cpp
+INCLUDES = $(SOURCES:.cpp=.h)
+OBJECTS = $(SOURCES:.cpp=.o) $(MAIN).o
+BUILD = build/
+EXECS =
 
-# Include header file diretory:
-INC_DIR = include
+all: $(MAIN)
 
-##########################################################
+$(MAIN): $(OBJECTS)
+	$(CC) $(CC_FLAGS) $(CC_INCLUDES) $(LIBRARY_PATH) $(addprefix $(BUILD),$(OBJECTS)) $(LIBRARIES) -o $(EXECS)$@ 
 
-## Make variables ##
+$(MAIN).o : $(MAIN).cpp $(INCLUDES)
+	$(CC) $(CC_FLAGS) $(CC_INCLUDES) $(LIBRARY_PATH) -c $< -o $(BUILD)$@ $(LIBRARIES)
 
-# Target executable name:
-EXE = run
+%.o : %.cpp %.h
+	$(CC) $(CC_FLAGS) $(CC_INCLUDES) $(LIBRARY_PATH) -c $< -o $(BUILD)$@ $(LIBRARIES)
 
-# Object files:
-OBJS = $(OBJ_DIR)/optionsParser.o $(OBJ_DIR)/double3.o $(OBJ_DIR)/integrator.o $(OBJ_DIR)/particle.o $(OBJ_DIR)/main.o
+$(shell mkdir -p $(BUILD) $(EXECS))  
 
-##########################################################
-
-## Compile ##
-
-# Link c++ and CUDA compiled object files to target executable:
-$(EXE) : $(OBJS)
-	$(CC) $(CC_FLAGS) $(OBJS) -o $@ 
-
-# Compile main .cpp file to object files:
-$(OBJ_DIR)/%.o : %.cpp
-	$(CC) $(CC_FLAGS) -c $< -o $@
-
-# Compile C++ source files to object files:
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp include/%.h
-	$(CC) $(CC_FLAGS) -c $< -o $@
-
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CC) $(CC_FLAGS) -c $< -o $@
-
-# Clean objects in object directory.
 clean:
-	$(RM) bin/* *.o $(EXE)
+	rm -f bin/* *.o $(MAIN)

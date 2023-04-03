@@ -4,11 +4,8 @@ Outputs the sign of a number.
 */
 
 #if defined(__HIPCC__)
-#include <hip/hip_runtime.h>
-#include <hiprand/hiprand.h>
-#include <hiprand/hiprand_kernel.h>
 #define __PREPROC__ __device__
-#elif defined(__NVCC__)
+#elif defined(__NVCOMPILER)
 #define __PREPROC__ __device__
 #else
 #include <random>
@@ -25,7 +22,7 @@ __global__ void runSimulation(int numParticles, outputDtype* outputArray, hipran
 	}
 }
 #elif defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
 	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tid < numParticles){
 		particle p(yi, OPT, seed, tid, &outputArray[tid*numOutput]);
@@ -135,7 +132,7 @@ __PREPROC__ void particle::calc_next_collision_time() {
 				double temp1 = -(sqr+v.y)/G_CONST;
 				double temp2 = (sqr-v.y)/G_CONST;
 				//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
-				dty = std::min({std::abs(temp1), std::abs(temp2)});
+				dty = min(std::abs(temp1), std::abs(temp2));
 		}
 		else{
 				double maxHeight = -0.5 * y2/G_CONST + pos.y;
@@ -144,14 +141,14 @@ __PREPROC__ void particle::calc_next_collision_time() {
 						double sqr = sqrt(-2.0*G_CONST*dy+y2);
 						double temp1 = -(sqr+v.y)/G_CONST;
 						double temp2 = (sqr-v.y)/G_CONST;
-						dty = std::max({temp1, temp2});
+						dty = max(temp1, temp2);
 				}
 				else{
 						dy = L.y*0.5 - pos.y; //how far to ceiling
 						double sqr = sqrt(-2.0*G_CONST*dy+y2);
 						double temp1 = -(sqr+v.y)/G_CONST;
 						double temp2 = (sqr-v.y)/G_CONST;
-						dty = std::min({std::abs(temp1), std::abs(temp2)});
+						dty = min(std::abs(temp1), std::abs(temp2));
 				}
 		}
 		if (dtx < 1e-16 || std::isnan(dtx))

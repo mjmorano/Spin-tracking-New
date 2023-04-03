@@ -1,6 +1,7 @@
 #pragma once
 #include <math.h>
 #include <algorithm>
+#include <random>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -10,18 +11,23 @@
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
 #define __PREPROC__ __device__
+#elif defined(__NVCOMPILER)
+#include <cuda_runtime.h>
+#include <curand.h>
+#include <curand_kernel.h>
+#define __PREPROC__ __device__
 #endif
 
-#include <random>
 #include "integrator.h"
 #include "options.h"
+#include "double3.h"
 
 // typedef void (*GRAD)(const double* pos, double* G);
 
 #if defined(__HIPCC__)
 __global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
 #elif defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
+__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
 #else
 void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput);
 #endif

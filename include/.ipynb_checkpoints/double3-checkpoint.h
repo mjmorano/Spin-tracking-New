@@ -1,7 +1,8 @@
 #pragma once
 
-#if(__NVCC__)
+#if(__NVCOMPILER)
 #define __PREPROC__ __host__ __device__
+#include <cuda_runtime.h>
 #elif(__HIPCC__)
 #define __PREPROC__ __host__ __device__
 #include <hip/hip_runtime.h>

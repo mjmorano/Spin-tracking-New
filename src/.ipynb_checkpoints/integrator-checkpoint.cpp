@@ -4,12 +4,12 @@
 
 #include <unistd.h>
 
-#if __HIPCC__
+#if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
 #define __PREPROC__ __device__
-#elif __NVCC__
+#elif defined(__NVCOMPILER)
 #define __PREPROC__ __device__
 #else
 #include <random>
@@ -448,8 +448,8 @@ __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const doub
 		endOfSimulDt = xf - x; //how long until the end of the simulation
 		nextOutputDt = lastOutput + OPT.ioutInt - x; //how long to the next output time
 		//printf("h = %.10f, hmax = %.10f, min = %.10f\n", h, OPT.hmax, hmin);
-		h = std::min(h, OPT.hmax);
-		h = std::max(h, hmin);
+		h = min(h, OPT.hmax);
+		h = max(h, hmin);
 		if(endOfSimulDt <= nextOutputDt && endOfSimulDt <= h){
 			stop = true;
 			h = endOfSimulDt;
