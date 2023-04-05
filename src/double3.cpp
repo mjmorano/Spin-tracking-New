@@ -2,7 +2,7 @@
 //#include <cmath>
 #include <math.h>
 
-#if defined(__NVCOMPILER)
+#if defined(__NVCOMPILER) || defined(__NVCC__)
 #define __PREPROC__ __host__ __device__
 #elif defined(__HIPCC__)
 #define __PREPROC__ __host__ __device__

@@ -13,5 +13,5 @@ B0, 0, 0, 3.0e-6
 E, 0, 0, 75.0e5,
 integratorType, 1
 h, 0.1
-numParticles, 1000
+numParticles, 1
 numPerGPUBlock, 128

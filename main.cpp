@@ -3,6 +3,7 @@
 #include <ctime>
 #include "include/particle.h"
 #include "include/options.h"
+#include "include/double3.h"
 #include "include/optionsParser.h"
 #include "include/simulation.h"
 

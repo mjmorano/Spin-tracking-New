@@ -1,10 +1,10 @@
 #ifndef __DOUBLE3_H_INCLUDED__
 #define __DOUBLE3_H_INCLUDED__
 
-#if(__NVCOMPILER)
+#if defined(__NVCOMPILER) || defined(__NVCC__)
 #define __PREPROC__ __host__ __device__
 #include <cuda_runtime.h>
-#elif(__HIPCC__)
+#elif defined(__HIPCC__)
 #define __PREPROC__ __host__ __device__
 #include <hip/hip_runtime.h>
 #else

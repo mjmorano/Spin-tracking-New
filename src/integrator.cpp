@@ -7,9 +7,9 @@
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
-#define __PREPROC__ __device__
-#elif defined(__NVCOMPILER)
-#define __PREPROC__ __device__
+#define __PREPROC__ __host__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+#define __PREPROC__ __host__ __device__
 #else
 #include <random>
 #define __PREPROC__

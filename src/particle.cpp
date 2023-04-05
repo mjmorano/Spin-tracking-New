@@ -4,12 +4,12 @@ Outputs the sign of a number.
 */
 
 #if defined(__HIPCC__)
-#define __PREPROC__ __device__
-#elif defined(__NVCOMPILER)
-#define __PREPROC__ __device__
+#define __PREPROCD__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+#define __PREPROCD__ __device__
 #else
 #include <random>
-#define __PREPROC__
+#define __PREPROCD__
 #endif
 
 using namespace std;
@@ -22,7 +22,7 @@ __global__ void runSimulation(int numParticles, outputDtype* outputArray, hipran
 		p.run();
 	}
 }
-#elif defined(__NVCOMPILER)
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
 __global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
 	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tid < numParticles){
@@ -44,7 +44,7 @@ void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsi
 #endif
 
 template <typename T>
-__PREPROC__ double particle::sgn(T val) {
+__PREPROCD__ double particle::sgn(T val) {
 	if(val<0)
 		return -1.0;
 	else
@@ -57,67 +57,67 @@ Calculates the timestep based on the next wall or gas collision.
 */
 
 #if defined(__HIPCC__)
-__PREPROC__ double particle::uniform(){
+__PREPROCD__ double particle::uniform(){
 	return hiprand_uniform_double(&rngState);
 }
 
-__PREPROC__ double particle::normal01(){
+__PREPROCD__ double particle::normal01(){
 	return hiprand_normal_double(&rngState);
 }
 
-__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
     return normal01() * sqrtkT_m;
 }
 
-__PREPROC__ double particle::unif02pi(){
+__PREPROCD__ double particle::unif02pi(){
     return hiprand_uniform_double(&rngState) * 2.0 * M_PI;
 }
 
-__PREPROC__ double particle::exponential(const double tc){
+__PREPROCD__ double particle::exponential(const double tc){
     return - tc * log(1.0 - hiprand_uniform_double(&rngState));
 }
-#elif defined(__NVCOMPILER)
-__PREPROC__ double particle::uniform(){
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+__PREPROCD__ double particle::uniform(){
 	return curand_uniform_double(&rngState);
 }
 
-__PREPROC__ double particle::normal01(){
+__PREPROCD__ double particle::normal01(){
 	return curand_normal_double(&rngState);
 }
 
-__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
     return normal01() * sqrtkT_m;
 }
 
-__PREPROC__ double particle::unif02pi(){
+__PREPROCD__ double particle::unif02pi(){
     return curand_uniform_double(&rngState) * 2.0 * M_PI;
 }
 
-__PREPROC__ double particle::exponential(const double tc){
+__PREPROCD__ double particle::exponential(const double tc){
     return - tc * log(1.0 - curand_uniform_double(&rngState));
 }
 #else
-__PREPROC__ double particle::uniform(){
+__PREPROCD__ double particle::uniform(){
 	return dist_uniform(gen64);
 }
-__PREPROC__ double particle::normal01(){
+__PREPROCD__ double particle::normal01(){
 	return dist_normal(gen64);
 }
 
-__PREPROC__ double particle::maxboltz(const double sqrtkT_m){
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
     return normal01() * sqrtkT_m;
 }
 
-__PREPROC__ double particle::unif02pi(){
+__PREPROCD__ double particle::unif02pi(){
     return dist_uniform(gen64) * 2.0 * M_PI;
 }
 
-__PREPROC__ double particle::exponential(const double tc){
+__PREPROCD__ double particle::exponential(const double tc){
     return - tc * log(1.0 - dist_uniform(gen64));
 }
 #endif
 
-__PREPROC__ void particle::calc_next_collision_time() {
+__PREPROCD__ void particle::calc_next_collision_time() {
 	if(gravity){
 		//calculate distance to collision point
 		dx = sgn(v.x) * L.x / 2.0 - pos.x;
@@ -226,7 +226,7 @@ __PREPROC__ void particle::calc_next_collision_time() {
 Calculates the new velocities after a wall or gas collision.
 */
 
-__PREPROC__ void particle::new_velocities() {
+__PREPROCD__ void particle::new_velocities() {
 	v_old = v;
 	Vel = len(v);
 	//printf("%c\n", coll_type);
@@ -282,7 +282,7 @@ __PREPROC__ void particle::new_velocities() {
 /*
 Moves the particle based on the particle velocity and calcuated timestep.
 */
-__PREPROC__ void particle::move() {
+__PREPROCD__ void particle::move() {
 	t_old = t; // update the time
 	t += dt; //increment forward
 	pos_old = pos; //update old position
@@ -301,7 +301,7 @@ __PREPROC__ void particle::move() {
 Performs one particle and spin integration step.
 */
 
-__PREPROC__ void particle::step() {
+__PREPROCD__ void particle::step() {
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	calc_next_collision_time(); //when do we hit something next?
 	move(); //move the particle forward that amount of time
@@ -328,7 +328,7 @@ __PREPROC__ void particle::step() {
 Convenience function that calls the step() function repeatedL.y until the end time is reached.
 */
 
-__PREPROC__ void particle::run() {
+__PREPROCD__ void particle::run() {
 	while (finished != true) {
 		step();
 	}

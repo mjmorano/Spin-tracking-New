@@ -19,7 +19,7 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		printf("starting things on the GPU\n");	
 		//do the CPU allocation first
 		outputArrayHost  = (outputDtype*)malloc(outputSize * numParticles);
-		#if defined(__NVCOMPILER)
+		#if defined(__NVCOMPILER) || defined(__NVCC__)
 		cudaMalloc(&outputArrayGPU, outputSize*numParticles); //output location
 		curandState *rngStates;
 		cudaMalloc(&rngStates, sizeof(curandState)*numParticles); //allocate one state per particle
@@ -36,7 +36,7 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		int numBlocks = std::ceil((double)opt.numParticles/(double)numPartsPerBlock);
 		runSimulation<<<numBlocks, numPartsPerBlock>>>(numParticles, outputArrayGPU, rngStates, opt, seed, yi, numOutput);
 		
-		#if defined(__NVCOMPILER)
+		#if defined(__NVCOMPILER) || defined(__NVCC__)
 		cudaDeviceSynchronize();
 		cudaMemcpy(outputArrayHost, outputArrayGPU, outputSize * numParticles, cudaMemcpyDeviceToHost);
 		cudaDeviceSynchronize();
@@ -62,7 +62,6 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		int numOutput = (opt.tf - opt.t0)/opt.ioutInt;
 		size_t outputSize = numOutput * sizeof(outputDtype);
 		outputDtype * outputArray = (outputDtype*)malloc(outputSize*numParticles); //allocate the total output size
-		
 		runSimulation(numParticles, outputArray, opt, seed, yi, numOutput);
 		
 		//printf("%d\n", (int)duration);
