@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __INTEGRATOR_H_DEFINED__
+#define __INTEGRATOR_H_DEFINED__
+
 #include <stdio.h>
 #include <cmath>
 #include <math.h>
@@ -10,12 +12,12 @@
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
-#define __PREPROC__ __device__
-#elif defined(__NVCOMPILER)
+#define __PREPROC__ __host__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#define __PREPROC__ __device__
+#define __PREPROC__ __host__ __device__
 #else
 #include <random>
 #define __PREPROC__
@@ -36,12 +38,10 @@ __PREPROC__ double3 grad(double3&);
 
 // double hinit(double, double*, double, double*, double*, double*, int, double, double, double);
 __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
-	const double3& v_old, const double3& v_new, options OPT,
-	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+	const double3& v_old, const double3& v_new, options OPT);
 
 __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
-	const double3& v_old, const double3& v_new, options OPT, double& h,
-	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+	const double3& v_old, const double3& v_new, options OPT, double& h);
 
 __PREPROC__ double sign(double, double);
 
@@ -49,3 +49,5 @@ __PREPROC__ double min_d(double, double);
 
 __PREPROC__ double max_d(double, double);
 
+
+#endif

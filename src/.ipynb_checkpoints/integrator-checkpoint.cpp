@@ -1,20 +1,21 @@
 #include "../include/integrator.h"
-#include "../include/options.h"
-#include "../include/coeff.h"
 
 #include <unistd.h>
+#include <math.h>
 
 #if defined(__HIPCC__)
 #include <hip/hip_runtime.h>
 #include <hiprand/hiprand.h>
 #include <hiprand/hiprand_kernel.h>
-#define __PREPROC__ __device__
-#elif defined(__NVCOMPILER)
-#define __PREPROC__ __device__
+#define __PREPROC__ __host__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+#define __PREPROC__ __host__ __device__
 #else
 #include <random>
 #define __PREPROC__
 #endif
+
+using namespace std;
 
 __PREPROC__ double sign(double a, double b)
 {
@@ -39,6 +40,8 @@ __PREPROC__ double3 pulse(const double t){
 __PREPROC__ double3 grad(double3& pos){
 	return {0.0, 0.0, 0.0};
 }
+
+/*
 
 __PREPROC__ void obs_dense(long nr, double xold, double x, double3 y, double3 pos_old, double3 v_old, int* irtrn, options opts, 
 		double* lastOutput, unsigned int *lastIndex, outputDtype* outputArray, double hout, double3& rcont1, double3& rcont2, 
@@ -91,6 +94,7 @@ __PREPROC__ void obs(long nr, double xold, double x, double3 y, double3 pos, int
 		*lastOutput += opts.ioutInt;
 	}
 }
+*/
 
 __PREPROC__ void interpolate(const double t, const double t0, const double tf, 
 		const double3& p_old, const double3& p_new, const double3& v_old, 
@@ -174,7 +178,7 @@ __PREPROC__ void Bloch(const double t, const double3& y, double3& f, const doubl
 
 __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
-		options OPT, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
+		options OPT){
 
     double3 yy1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
     double3 rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8;
@@ -216,12 +220,13 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
     nfcn += 2;
     reject = 0;
     xold = x;
+	/*
     if (OPT.iout){
         irtrn = 1;
         hout = 1.0;
         xout = t0;
-        obs(naccpt+1, xold, x, y, p_old, &irtrn, OPT, &lastOutput, &lastIndex, outputArray);
-    }
+        obs(naccpt+1, xold, x, y, p_old, &irtrn, OPT);
+    }*/
 
     while (1){
 
@@ -322,11 +327,11 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
             naccpt++;
             Bloch(xph, k5, k4, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
             nfcn++;
-            
-            /* final preparation for dense output */
-            if (OPT.iout == 2)
-            {
-            /* save the first function evaluations */
+			/*
+			// final preparation for dense output
+			if (OPT.iout == 2)
+			{
+				//save the first function evaluations
 				rcont1 = y;
 				ydiff = k5 - y;
 				rcont2 = ydiff;
@@ -342,23 +347,23 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
 				rcont8 = COEF::d71*k1 + COEF::d76*k6 + COEF::d77*k7 + COEF::d78*k8 +
 					COEF::d79*k9 + COEF::d710*k10 + COEF::d711*k2 + COEF::d712*k3;
 
-                /* the next three function evaluations */
+				//the next three function evaluations 
 			   yy1 = y + h * (COEF::a141*k1 + COEF::a147*k7 + COEF::a148*k8 +
 					COEF::a149*k9 + COEF::a1410*k10 + COEF::a1411*k2 +
 					COEF::a1412*k3 + COEF::a1413*k4);
-                Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+				Bloch(x+COEF::c14*h, yy1, k10, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 				yy1 = y + h * (COEF::a151*k1 + COEF::a156*k6 + COEF::a157*k7 + COEF::a158*k8 +
 					COEF::a1511*k2 + COEF::a1512*k3 + COEF::a1513*k4 +
 					COEF::a1514*k10);
-                Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+				Bloch(x+COEF::c15*h, yy1, k2, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 				yy1 = y + h * (COEF::a161*k1 + COEF::a166*k6 + COEF::a167*k7 + COEF::a168*k8 +
 							COEF::a169*k9 + COEF::a1613*k4 + COEF::a1614*k10 +
 							COEF::a1615*k2);
-                Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
-                nfcn += 3;
+				Bloch(x+COEF::c16*h, yy1, k3, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
+				nfcn += 3;
 
-                /* final preparation */
-                
+				//final preparation
+
 				rcont5 = h * (rcont5 + COEF::d413*k4 + COEF::d414*k10 +
 						COEF::d415*k2 + COEF::d416*k3);
 				rcont6 = h * (rcont6 + COEF::d513*k4 + COEF::d514*k10 +
@@ -367,28 +372,28 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
 						COEF::d615*k2 + COEF::d616*k3);
 				rcont8 = h * (rcont8 + COEF::d713*k4 + COEF::d714*k10 +
 						COEF::d715*k2 + COEF::d716*k3);
-            }
-
-            k1 = k4;
-            y = k5;
-            xold = x;
-            x = xph;
-
-            if (OPT.iout == 1){
-                hout = h;
-                xout = x;
+			}
+			*/
+			k1 = k4;
+			y = k5;
+			xold = x;
+			x = xph;
+			/*
+			if (OPT.iout == 1){
+				hout = h;
+				xout = x;
 				obs(naccpt+1, xold, x, y, p_old, &irtrn, OPT, &lastOutput, &lastIndex, outputArray);
-                if (irtrn < 0)
-                    return 2;
-            } else if (OPT.iout == 2){
-                hout = h;
-                xout = x;
+				if (irtrn < 0)
+					return 2;
+			} else if (OPT.iout == 2){
+				hout = h;
+				xout = x;
 				obs_dense(naccpt+1, xold, x, y, p_old, v_old, &irtrn, OPT, &lastOutput, &lastIndex, outputArray, hout, rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8);
-                if (irtrn < 0)
-                    return 2;
-            }
+				if (irtrn < 0)
+					return 2;
+			}*/
 
-            /* normal exit */
+            // normal exit
             if (last)
             {
                 hout=hnew;
@@ -419,7 +424,7 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
 
 __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, 
 		const double3& p_new, const double3& v_old, const double3& v_new, 
-		options OPT, double &h, double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray){
+		options OPT, double &h){
 	double x = t0;
 	double xf = tf;
 	bool out = false;
@@ -446,25 +451,18 @@ __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const doub
 	while(1){
 		nstep++;
 		endOfSimulDt = xf - x; //how long until the end of the simulation
-		nextOutputDt = lastOutput + OPT.ioutInt - x; //how long to the next output time
+		//nextOutputDt = lastOutput + OPT.ioutInt - x; //how long to the next output time
 		//printf("h = %.10f, hmax = %.10f, min = %.10f\n", h, OPT.hmax, hmin);
 		h = min(h, OPT.hmax);
 		h = max(h, hmin);
-		if(endOfSimulDt <= nextOutputDt && endOfSimulDt <= h){
-			stop = true;
+		if(h > endOfSimulDt){
 			h = endOfSimulDt;
+			stop = true;
 		}
-		else if(nextOutputDt <= endOfSimulDt && nextOutputDt <= h){
+		else{
 			stop = false;
-			out = true;
-			h = nextOutputDt;
 		}
-		else if(h <= nextOutputDt && h <= endOfSimulDt){
-			stop = false;
-			out = false;
-			h = h;
-		}
-		//printf("%lf %.10f %lf \n", x, h, lastOutput);
+		//printf("%lf %.10f %lf \n", x, h, endOfSimulDt);
 		//sleep(1);
 		if(h < OPT.swapStepSize){ //in this case we want to use the traditional RK45 methodology
 			//printf("using normal\n");
@@ -511,6 +509,7 @@ __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const doub
 		if(absErr <= OPT.rtol){ //accept the step and move on to the next one
 			x= x + h; //what time are we at now
 			y = weightedStep; //update the spin for the next iteration
+			/*
 			if(out){
 				//printf("%lf %lf %lf\n", weightedStep.x, weightedStep.y, weightedStep.z);
 				double3 outPos = p_old + v_old * (x-t0) + 0.5*a*(x-t0)*(x-t0);
@@ -526,7 +525,7 @@ __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const doub
 				lastIndex += 1;
 				lastOutput += OPT.ioutInt;
 				out = false; //now reset this so we don't automatically output it again
-			}
+			}*/
 		}
 		//now update the time step for the next calculation
 		if(absErr < 1.0E-16)

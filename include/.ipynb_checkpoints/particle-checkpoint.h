@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __PARTICLE_H_DEFINED__
+#define __PARTICLE_H_DEFINED__
+
 #include <math.h>
 #include <algorithm>
 #include <random>
@@ -7,15 +9,12 @@
 #include <omp.h>
 #endif
 #if defined(__HIPCC__)
-#include <hip/hip_runtime.h>
-#include <hiprand/hiprand.h>
-#include <hiprand/hiprand_kernel.h>
-#define __PREPROC__ __device__
-#elif defined(__NVCOMPILER)
+#define __PREPROCD__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+#define __PREPROCD__ __device__
 #include <cuda_runtime.h>
-#include <curand.h>
-#include <curand_kernel.h>
-#define __PREPROC__ __device__
+#else
+#define __PREPROCD__ 
 #endif
 
 #include "integrator.h"
@@ -23,18 +22,9 @@
 #include "double3.h"
 
 // typedef void (*GRAD)(const double* pos, double* G);
-
-#if defined(__HIPCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
-#elif defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
-#else
-void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput);
-#endif
-
 class particle
 {
-	const double k = 1.380649e-23;
+	double k = 1.380649e-23;
 
 public:
 	size_t n_bounce = 0;
@@ -44,9 +34,8 @@ public:
 	bool bad = true;
 	double lastOutput = 0.0;
 	unsigned int lastIndex = 0;
-	outputDtype *outputArray;
 	
-	__PREPROC__ particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart, outputDtype* storage) :
+	__PREPROCD__ particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart) :
 		L(OPT.L), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
@@ -58,12 +47,11 @@ public:
 		// First do the RNG initialization. This will depend heavily on the compiler being used
 		#if defined(__HIPCC__)
 		hiprand_init(seed, ipart, 0, &rngState);
-		#elif defined(__NVCC__)
+		#elif defined(__NVCOMPILER) || defined(__NVCC__)
 		curand_init(seed, ipart, 0, &rngState);
 		#endif
 		// printf("%u\n", &thread_data);
 		S = y0;
-		outputArray = storage;
 
 		pos.x = uniform()*L.x-L.x/2.0;
 		pos.y = uniform()*L.y-L.y/2.0;
@@ -79,7 +67,6 @@ public:
 		}
 		else
 			next_gas_coll_time = tf + 1.0;
-
 		if (dist == 'C') {
 
 			double3 vec;
@@ -101,24 +88,26 @@ public:
 		v_old = v;
 	}
 
-	__PREPROC__ ~particle() {};
-	__PREPROC__ void calc_next_collision_time();
-	template <typename T> __PREPROC__ double sgn(T val);
-	__PREPROC__ void new_velocities();
-	__PREPROC__ void move();
-	__PREPROC__ void step();
-	__PREPROC__ void run();
-	__PREPROC__ double uniform();
-	__PREPROC__ double normal01();
-	__PREPROC__ double maxboltz(const double);
-	__PREPROC__ double unif02pi();
-	__PREPROC__ double exponential(const double);
+	__PREPROCD__ ~particle() {};
+	__PREPROCD__ void calc_next_collision_time();
+	template <typename T> __PREPROCD__ double sgn(T val);
+	__PREPROCD__ void new_velocities();
+	__PREPROCD__ void move();
+	__PREPROCD__ void step();
+	__PREPROCD__ void run();
+	__PREPROCD__ double uniform();
+	__PREPROCD__ double normal01();
+	__PREPROCD__ double maxboltz(const double);
+	__PREPROCD__ double unif02pi();
+	__PREPROCD__ double exponential(const double);
+	__PREPROCD__ outputDtype getState();
+	__PREPROCD__ void updateTF(double);
 
 private:
 	options opt;
-	const bool diffuse;
-	const bool gas_coll;
-	const bool gravity;
+	bool diffuse;
+	bool gas_coll;
+	bool gravity;
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
@@ -135,11 +124,11 @@ private:
 	double sqrtKT_m;
 	double V_init;
 	double Vel = 0.0;
-	const double3 L;
+	double3 L;
 	char coll_type = 'W';
 	char dist = 'C';
-	const double t0;
-	const double tf;
+	double t0;
+	double tf;
 	double t;
 	double t_old;
 	double dt = 0.0;
@@ -166,12 +155,14 @@ private:
 	unsigned long seed = 0;
 	#if defined(__HIPCC__)
 	hiprandStateXORWOW_t rngState;
-	#elif defined(__NVCC__)
+	#elif defined(__NVCOMPILER) || defined(__NVCC__)
 	curandState rngState;
 	#else
-	std::random_device dev;
-	std::mt19937_64 gen64{dev()};
+	//std::random_device dev;
+	std::mt19937_64 gen64;
 	std::normal_distribution<double> dist_normal{0.0, 1.0};
 	std::uniform_real_distribution<double> dist_uniform{0.0, 1.0};
 	#endif
 };
+
+#endif

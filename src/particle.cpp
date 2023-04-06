@@ -1,4 +1,5 @@
 #include "../include/particle.h"
+#include <unistd.h>
 /*
 Outputs the sign of a number.
 */
@@ -13,35 +14,6 @@ Outputs the sign of a number.
 #endif
 
 using namespace std;
-
-#if defined(__HIPCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
-	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	if(tid < numParticles){
-		particle p(yi, OPT, seed, tid, &outputArray[tid*numOutput]);
-		p.run();
-	}
-}
-#elif defined(__NVCOMPILER) || defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput){
-	unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-	if(tid < numParticles){
-		particle p(yi, OPT, seed, tid, &outputArray[tid*numOutput]);
-		p.run();
-	}
-}
-#else
-void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput){
-	#if defined(_OPENMP)
-	#pragma omp parallel for
-	#endif
-	for(unsigned int n = 0; n<numParticles;n++){
-		//printf("%d\n", omp_get_num_threads());
-		particle p(yi, OPT, seed, n, &outputArray[n*numOutput]);
-		p.run();
-	}
-}
-#endif
 
 template <typename T>
 __PREPROCD__ double particle::sgn(T val) {
@@ -214,7 +186,7 @@ __PREPROCD__ void particle::calc_next_collision_time() {
 		coll_type = 'G';
 		n_coll += 1;
 	}
-	else {
+	else { //in this case it reached the end of the simulation
 		//printf("huh?");
 		coll_type = 'N';
 		dt = tf - t;
@@ -303,19 +275,24 @@ Performs one particle and spin integration step.
 
 __PREPROCD__ void particle::step() {
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
+	
+	//printf("determining collision time\n");
 	calc_next_collision_time(); //when do we hit something next?
+	//printf("moving forward\n");
 	move(); //move the particle forward that amount of time
 	//printf("%f %f %f %f\n", t, pos.x, pos.y, pos.z);
 	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
+	//printf("updating velocities\n");
 	new_velocities(); //update the velocity based on the collision type
 	//printf("h before = %lf, startTime = %lf, stopTime = %lf, lastOutput = %lf\n", h, t_old, t, lastOutput);
+	//printf("integrating with type %d\n", integrationType);
 	if(integrationType == 0){
 		//use the DOP853 algorithm for spin tracking
-		integrateDOP(t_old, t, S, pos_old, pos, v_old, v, opt, lastOutput, lastIndex, outputArray);
+		integrateDOP(t_old, t, S, pos_old, pos, v_old, v, opt);
 	}
 	else if(integrationType == 1){
 		//use the hybrid RK45 method
-		integrateRK45Hybrid(t_old, t, S, pos_old, pos, v_old, v, opt, h, lastOutput, lastIndex, outputArray);
+		integrateRK45Hybrid(t_old, t, S, pos_old, pos, v_old, v, opt, h);
 	}
 	else{
 		//this is an unrecognized option so just don't integrate the spin in this case
@@ -328,8 +305,28 @@ __PREPROCD__ void particle::step() {
 Convenience function that calls the step() function repeatedL.y until the end time is reached.
 */
 
-__PREPROCD__ void particle::run() {
+__PREPROCD__ outputDtype particle::getState(){
+	outputDtype out;
+	out.t = t;
+	out.x = pos;
+	out.s = S;
+	return out;
+}
+
+__PREPROCD__ void particle::updateTF(double tfNew){
+	if(tfNew > tf){
+		//only do something if the new time is larger than the old time
+		dt = tfNew - tf;
+		tf = tfNew;
+		finished = false;
+	}
+	return;
+}
+
+__PREPROCD__ void particle::run(){
+	finished = false;
 	while (finished != true) {
+		//sleep(1);
 		step();
 	}
 }

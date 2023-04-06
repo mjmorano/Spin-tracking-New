@@ -11,31 +11,31 @@ using namespace std;
 using namespace std::chrono;
 
 
-options parseUserInput(int argc, char * argv[]);
+options parseUserInput(int argc, char * argv[], char** outputName);
 
 int main(int argc, char* argv[]){
-	options opt = parseUserInput(argc, argv);
+	char * outputName;
+	options opt = parseUserInput(argc, argv, &outputName);
 	int totalTime = 3600; //total time allowed in seconds
-	char * outputName = "../data"; //the start of the output name, will automatically end in .bin and follow outputName01.bin, outputName02.bin, etc
 	unsigned int seed = 0;
-	double3 yi = {1.0, 0.0, 0.0};
-	
 	auto start = high_resolution_clock::now();
-	mainAnalysis(opt, totalTime, outputName, seed, yi);
+	mainAnalysis(opt, totalTime, outputName, seed);
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop-start).count();
 	std::cout<<duration<<std::endl;
 	return 0;
 }
 
-options parseUserInput(int argc, char *argv[]){
+options parseUserInput(int argc, char *argv[], char** outputName){
 	//assume the first input is the file name
-	if(argc < 2){
+	if(argc < 3){
 		std::cout<<"invalid input options"<<std::endl;
+		std::cout<<"Expects ./main parameterFile outputFile\n"<<std::endl;
 		exit(-1);
 	}
 	char *filename = argv[1];
 	options opt = optionParser(filename);
+	*outputName = argv[2];
 	return opt;
 	
 }

@@ -52,6 +52,9 @@ void parseLine(options& opt, std::string s){
 	if(elements.at(0) == "L"){
 		opt.L = {std::stod(elements.at(1)), std::stod(elements.at(2)), std::stod(elements.at(3))};
 	}
+	else if(elements.at(0) == "L"){
+		opt.yi = {std::stod(elements.at(1)), std::stod(elements.at(2)), std::stod(elements.at(3))};
+	}
 	else if(elements.at(0) == "dist"){
 		opt.dist = elements.at(1)[0];
 	}
@@ -100,12 +103,6 @@ void parseLine(options& opt, std::string s){
 	else if(elements.at(0) == "beta"){
 		opt.beta = std::stod(elements.at(1));
 	}
-	else if(elements.at(0) == "iout"){
-		opt.iout = std::stoi(elements.at(1));
-	}
-	else if(elements.at(0) == "ioutInt"){
-		opt.ioutInt = std::stod(elements.at(1));
-	}
 	else if(elements.at(0) == "uround"){
 		opt.uround = std::stod(elements.at(1));
 	}
@@ -128,16 +125,31 @@ void parseLine(options& opt, std::string s){
 		opt.nmax = std::stoi(elements.at(1));
 	}
 	else if(elements.at(0) == "integratorType"){
-		opt.nmax = std::stoi(elements.at(1));
+		opt.integratorType = std::stoi(elements.at(1));
 	}
 	else if(elements.at(0) == "swapStepSize"){
-		opt.nmax = std::stod(elements.at(1));
+		opt.swapStepSize = std::stod(elements.at(1));
 	}
 	else if(elements.at(0) == "numParticles"){
 		opt.numParticles = std::stoi(elements.at(1));
 	}
 	else if(elements.at(0) == "numPerGPUBlock"){
 		opt.numPerGPUBlock = std::stoi(elements.at(1));
+	}
+	else if(elements.at(0) == "output"){
+		opt.output = elements.at(1)[0];
+	}
+	else if(elements.at(0) == "gridSize"){
+		opt.gridSize = std::stod(elements.at(1));
+	}
+	else if(elements.at(0) == "vecBinSize"){
+		opt.vecBinSize = std::stod(elements.at(1));
+	}
+	else if(elements.at(0) == "ioutInt"){
+		opt.ioutInt = std::stod(elements.at(1));
+	}
+	else if(elements.at(0) == "iout"){
+		opt.iout = std::stoi(elements.at(1));
 	}
 }
 

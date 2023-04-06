@@ -38,12 +38,10 @@ __PREPROC__ double3 grad(double3&);
 
 // double hinit(double, double*, double, double*, double*, double*, int, double, double, double);
 __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
-	const double3& v_old, const double3& v_new, options OPT,
-	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+	const double3& v_old, const double3& v_new, options OPT);
 
 __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const double3& p_old, const double3& p_new, 
-	const double3& v_old, const double3& v_new, options OPT, double& h,
-	double& lastOutput, unsigned int& lastIndex, outputDtype* outputArray);
+	const double3& v_old, const double3& v_new, options OPT, double& h);
 
 __PREPROC__ double sign(double, double);
 

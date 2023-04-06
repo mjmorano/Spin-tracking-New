@@ -22,18 +22,9 @@
 #include "double3.h"
 
 // typedef void (*GRAD)(const double* pos, double* G);
-
-#if defined(__HIPCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, hiprandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
-#elif defined(__NVCOMPILER) || defined(__NVCC__)
-__global__ void runSimulation(int numParticles, outputDtype* outputArray, curandStateXORWOW_t* states, options OPT, unsigned long seed, double3 yi, int numOutput);
-#else
-void runSimulation(int numParticles, outputDtype* outputArray, options OPT, unsigned long seed, double3 yi, int numOutput);
-#endif
-
 class particle
 {
-	const double k = 1.380649e-23;
+	double k = 1.380649e-23;
 
 public:
 	size_t n_bounce = 0;
@@ -43,9 +34,8 @@ public:
 	bool bad = true;
 	double lastOutput = 0.0;
 	unsigned int lastIndex = 0;
-	outputDtype *outputArray;
 	
-	__PREPROCD__ particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart, outputDtype* storage) :
+	__PREPROCD__ particle(double3 y0, options OPT, unsigned long seed, unsigned int ipart) :
 		L(OPT.L), m(OPT.m), tc(OPT.tc), 
 		dist(OPT.dist), V_init(OPT.V), t0(OPT.t0), tf(OPT.tf), 
 		diffuse(OPT.diffuse), gas_coll(OPT.gas_coll), 
@@ -62,7 +52,6 @@ public:
 		#endif
 		// printf("%u\n", &thread_data);
 		S = y0;
-		outputArray = storage;
 
 		pos.x = uniform()*L.x-L.x/2.0;
 		pos.y = uniform()*L.y-L.y/2.0;
@@ -111,12 +100,14 @@ public:
 	__PREPROCD__ double maxboltz(const double);
 	__PREPROCD__ double unif02pi();
 	__PREPROCD__ double exponential(const double);
+	__PREPROCD__ outputDtype getState();
+	__PREPROCD__ void updateTF(double);
 
 private:
 	options opt;
-	const bool diffuse;
-	const bool gas_coll;
-	const bool gravity;
+	bool diffuse;
+	bool gas_coll;
+	bool gravity;
 	double y = 0;
 	double theta = 0;
 	double phi = 0;
@@ -133,11 +124,11 @@ private:
 	double sqrtKT_m;
 	double V_init;
 	double Vel = 0.0;
-	const double3 L;
+	double3 L;
 	char coll_type = 'W';
 	char dist = 'C';
-	const double t0;
-	const double tf;
+	double t0;
+	double tf;
 	double t;
 	double t_old;
 	double dt = 0.0;
@@ -167,8 +158,8 @@ private:
 	#elif defined(__NVCOMPILER) || defined(__NVCC__)
 	curandState rngState;
 	#else
-	std::random_device dev;
-	std::mt19937_64 gen64{dev()};
+	//std::random_device dev;
+	std::mt19937_64 gen64;
 	std::normal_distribution<double> dist_normal{0.0, 1.0};
 	std::uniform_real_distribution<double> dist_uniform{0.0, 1.0};
 	#endif
