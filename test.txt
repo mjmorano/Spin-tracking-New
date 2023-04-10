@@ -1,0 +1,3 @@
+nvc -g -O3 -x cu -std=c++17  -I /opt/nvidia/hpc_sdk/Linux_x86_64/22.11/math_libs/include -L /opt/nvidia/hpc_sdk/Linux_x86_64/22.11/math_libs/lib64 -L /opt/nvidia/hpc_sdk/Linux_x86_64/22.11/cuda/lib64 -c src/double3.cpp -o build/double3.o -lcudart -lcurand
+-x=c|i|cpp-output|asm|assembler|ASM|assembler-with-cpp|none
+                    Specify the language for any following input files, instead of letting the compiler choose based on suffix. Turn off with -x none

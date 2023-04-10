@@ -6,7 +6,7 @@ iout, 2
 gas_coll, false
 rtol, 1.0e-14
 t0, 0.0
-tf, 2000.0
+tf, 20.0
 ioutInt, 0.1
 gravity, true
 B0, 0, 0, 3.0e-6

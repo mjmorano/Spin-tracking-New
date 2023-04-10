@@ -37,5 +37,4 @@ options parseUserInput(int argc, char *argv[], char** outputName){
 	options opt = optionParser(filename);
 	*outputName = argv[2];
 	return opt;
-	
 }

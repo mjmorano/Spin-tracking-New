@@ -9,7 +9,7 @@ outputBuffers createOutputBuffers(options opt){
 		#if defined(__HIPCC__)
 		hipMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles);
 		#elif defined(__NVCC__) || defined(__NVCOMPILER)
-		cudaMalloc(buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles);
+		cudaMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles);
 		#endif
 		if(tolower(opt.output) == 'a'){
 			//This means output the average and standard deviation of the particle data at the different output interval times
@@ -268,7 +268,7 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		
 		particle* particles;
 		#if defined(__NVCOMPILER) || defined(__NVCC__)
-		cudaMalloc(particles, sizeof(particle) * opt.numParticles);
+		cudaMalloc(&particles, sizeof(particle) * opt.numParticles);
 		#elif defined(__HIPCC__)
 		hipMalloc(&particles, sizeof(particle) * opt.numParticles);
 		#endif
