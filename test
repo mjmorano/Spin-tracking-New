@@ -1,7 +1,0 @@
-g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -c src/double3.cpp -o build/double3.o 
-g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -c src/optionsParser.cpp -o build/optionsParser.o 
-g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -c src/integrator.cpp -o build/integrator.o 
-g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -c src/particle.cpp -o build/particle.o 
-g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -c src/simulation.cpp -o build/simulation.o 
-#g++  -g -w -O3 -std=c++17 -fPIC -fopenmp    -o main main.cpp  build/double3.o build/optionsParser.o build/integrator.o build/particle.o build/simulation.o 
-g++    build/double3.o build/optionsParser.o build/integrator.o build/particle.o build/simulation.o -o main main.cpp  

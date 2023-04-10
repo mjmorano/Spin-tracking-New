@@ -25,14 +25,6 @@ CC_INCLUDES = -I $(BASEGPUPATH)
 LIBRARY_PATH = -L $(BASEGPUPATH)
 LIBRARIES = -lcudart -lcurand
 
-
-#Using NVC++
-#CC = /usr/local/cuda-11.8/bin/nvcc #NVIDIA GPU compilation
-#CC = nvc++
-#CC_INCLUDES = -I $(BASEGPUPATH)/math_libs/include
-#LIBRARY_PATH = -L $(BASEGPUPATH)/math_libs/lib64 -L $(BASEGPUPATH)/cuda/lib64
-#LIBRARIES = -lcudart -lcurand
-
 #end nvidia GPU compilation section
 
 
