@@ -33,6 +33,12 @@ struct options{
 	double vecBinSize = 0.1; //the width of each bin for the spin data, always from -1 to 1
 	double ioutInt = 0.05; // how frequently to output the state data
 	
+	unsigned int nmax = 10000000;
+	int integratorType = 0; //0 means DOP853, 1 means hybrid RK45 approach
+	int numParticles = 1000;
+	int numPerGPUBlock = 128;
+	int iout = 2; //used for the DOP853 integration method, don't mess with this
+	
 	char dist = 'C';
 	char output = 'A'; //controls the type of output being used, N means all particles, A means average, H means histogram
 	
@@ -40,14 +46,6 @@ struct options{
 	bool diffuse = true;
 	bool gravity = true;
 	//these are x, y, z coordinates
-	
-	unsigned int nmax = 10000000;
-	int integratorType = 0; //0 means DOP853, 1 means hybrid RK45 approach
-	int numParticles = 1000;
-	int numPerGPUBlock = 128;
-	int iout = 2; //used for the DOP853 integration method, don't mess with this
-	
-	
 };
 
 #endif

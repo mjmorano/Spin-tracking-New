@@ -274,8 +274,7 @@ Performs one particle and spin integration step.
 */
 
 __PREPROCD__ void particle::step() {
-	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
-	
+	//printf("t = %f, tf = %f, dt = %f, v = %f %f %f, pos = %f %f %f\n", t, tf, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
 	//printf("determining collision time\n");
 	calc_next_collision_time(); //when do we hit something next?
 	//printf("moving forward\n");
@@ -314,12 +313,9 @@ __PREPROCD__ outputDtype particle::getState(){
 }
 
 __PREPROCD__ void particle::updateTF(double tfNew){
-	if(tfNew > tf){
-		//only do something if the new time is larger than the old time
-		dt = tfNew - tf;
-		tf = tfNew;
-		finished = false;
-	}
+	dt = tfNew - tf;
+	tf = tfNew;
+	finished = false;
 	return;
 }
 

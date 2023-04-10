@@ -49,6 +49,8 @@ public:
 		hiprand_init(seed, ipart, 0, &rngState);
 		#elif defined(__NVCOMPILER) || defined(__NVCC__)
 		curand_init(seed, ipart, 0, &rngState);
+		#else
+		gen64.seed(seed + ipart);
 		#endif
 		// printf("%u\n", &thread_data);
 		S = y0;

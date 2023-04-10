@@ -29,6 +29,7 @@ outputBuffers createOutputBuffers(options opt){
 			buffers.numx = opt.L.x/opt.gridSize+1;
 			buffers.numy = opt.L.y/opt.gridSize+1;
 			buffers.numz = opt.L.z/opt.gridSize+1;
+			//printf("%d %d %d %d \n", buffers.numVecBins, buffers.numx, buffers.numy, buffers.numz);
 			buffers.xHist = (unsigned int*)malloc(sizeof(unsigned int) * buffers.numx);
 			buffers.yHist = (unsigned int*)malloc(sizeof(unsigned int) * buffers.numy);
 			buffers.zHist = (unsigned int*)malloc(sizeof(unsigned int) * buffers.numz);
@@ -109,10 +110,12 @@ void runSimulation(particle* particles, int numParticles, options OPT, outputBuf
 	#pragma omp parallel for
 	#endif
 	for(unsigned int tid = 0; tid < numParticles; tid++){
+		//printf("nextTOut = %f\n", nextTOut);
 		particles[tid].updateTF(nextTOut);
+		//printf("state = %.14f \n", particles[tid].getState().t);
 		particles[tid].run();
 		buffers.particleStatesCPU[tid] = particles[tid].getState(); 
-		printf("state = %.14f \n", particles[tid].getState().t);
+		//printf("state = %.14f \n", particles[tid].getState().t);
 	}
 }
 #endif
@@ -188,9 +191,6 @@ void handleOutput(FILE * f, particle* particles, options opt, outputBuffers buff
 		hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost);
 		hipDeviceSynchronize();
 		#endif
-		for(int i = 0; i < opt.numParticles; i++){
-			printf("%.14f\n", buffers.particleStatesCPU[i].t);
-		}
 		fwrite(buffers.particleStatesCPU, sizeof(outputDtype) * opt.numParticles, 1, f);
 	}
 	else if(tolower(opt.output) == 'h'){
@@ -210,42 +210,42 @@ void handleOutput(FILE * f, particle* particles, options opt, outputBuffers buff
 			buffers.temp[i] = buffers.particleStatesCPU[i].x.x;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.xHist, buffers.gridSize, -opt.L.x/2.0, buffers.numx);
-		fwrite(buffers.xHist, sizeof(double), buffers.numx, f);
+		fwrite(buffers.xHist, sizeof(unsigned int), buffers.numx, f);
 		
 		//y coordinate data
 		for(int i = 0; i < opt.numParticles; i++){
 			buffers.temp[i] = buffers.particleStatesCPU[i].x.y;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.yHist, buffers.gridSize, -opt.L.y/2.0, buffers.numy);
-		fwrite(buffers.yHist, sizeof(double), buffers.numy, f);
+		fwrite(buffers.yHist, sizeof(unsigned int), buffers.numy, f);
 		
 		//z coordinate data
 		for(int i = 0; i < opt.numParticles; i++){
 			buffers.temp[i] = buffers.particleStatesCPU[i].x.z;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.zHist, buffers.gridSize, -opt.L.z/2.0, buffers.numz);
-		fwrite(buffers.zHist, sizeof(double), buffers.numz, f);
+		fwrite(buffers.zHist, sizeof(unsigned int), buffers.numz, f);
 		
 		//spin x coordinate data
 		for(int i = 0; i < opt.numParticles; i++){
 			buffers.temp[i] = buffers.particleStatesCPU[i].s.x;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.sxHist, buffers.vecBinSize, -1.0, buffers.numVecBins);
-		fwrite(buffers.sxHist, sizeof(double), buffers.numVecBins, f);
+		fwrite(buffers.sxHist, sizeof(unsigned int), buffers.numVecBins, f);
 		
 		//spin y coordinate data
 		for(int i = 0; i < opt.numParticles; i++){
 			buffers.temp[i] = buffers.particleStatesCPU[i].s.y;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.syHist, buffers.vecBinSize, -1.0, buffers.numVecBins);
-		fwrite(buffers.syHist, sizeof(double), buffers.numVecBins, f);
+		fwrite(buffers.syHist, sizeof(unsigned int), buffers.numVecBins, f);
 		
 		//spin z coordinate data
 		for(int i = 0; i < opt.numParticles; i++){
 			buffers.temp[i] = buffers.particleStatesCPU[i].s.z;
 		}
 		histogram(buffers.temp, opt.numParticles, buffers.szHist, buffers.vecBinSize, -1.0, buffers.numVecBins);
-		fwrite(buffers.szHist, sizeof(double), buffers.numVecBins, f);
+		fwrite(buffers.szHist, sizeof(unsigned int), buffers.numVecBins, f);
 	}
 }
 
@@ -310,7 +310,6 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		unsigned int numIterations = int(floor(double(opt.tf - opt.t0)/opt.ioutInt));
 		for(int i = 0; i < numIterations; i++){
 			double nextTime = ((double)i+1.0)*opt.ioutInt; //figure out the next stop time for the particles
-			printf("%.14f\n", nextTime);
 			runSimulation(particles, opt.numParticles, opt, buffers, nextTime);
 			handleOutput(f, particles, opt, buffers);
 		}
