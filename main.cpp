@@ -1,49 +1,40 @@
 #include <iostream>
-#include <math.h>
-#include <fstream>
 #include <chrono>
-#include <vector>
-#include <iomanip>
-#include <openacc.h>
-#include "include/test.cuh"
-#include "include/DOP853.h"
+#include <ctime>
 #include "include/particle.h"
 #include "include/options.h"
-
-std::ofstream outfile;
+#include "include/double3.h"
+#include "include/optionsParser.h"
+#include "include/simulation.h"
 
 using namespace std;
 using namespace std::chrono;
 
-double pulse(double t){
-    // return 64.7775066e-6*cos(10000*t);
-    return 0.0;
+
+options parseUserInput(int argc, char * argv[], char** outputName);
+
+int main(int argc, char* argv[]){
+	char * outputName;
+	options opt = parseUserInput(argc, argv, &outputName);
+	int totalTime = 3600; //total time allowed in seconds
+	unsigned int seed = 0;
+	auto start = high_resolution_clock::now();
+	mainAnalysis(opt, totalTime, outputName, seed);
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop-start).count();
+	std::cout<<duration<<std::endl;
+	return 0;
 }
 
-void grad(const vector<double> pos, vector<double>&G){
-    G[0] = 0.0;
-    G[1] = 0.0;
-    G[2] = 0.0;
-}
-
-void solout(long nr, double xold, double x, std::vector<double>& y, unsigned int n, int* irtrn){
-    outfile << setprecision(16);
-    outfile << x << "\t" << y[0] << "\t" << y[1] << "\t" << y[2] << "\n";
-}
-
-int main() {
-
-    outfile.open("/mnt/c/Users/moran/Desktop/dressing.txt");
-    std::vector<double> yi = {1.0, 0.0, 0.0};
-	options opt;
-    opt.iout = 1;
-    opt.gas_coll = false;
-    opt.rtol = 1e-14;
-    opt.t0 = 0.0;
-    opt.tf = 1.0;
-    opt.B0 = 3e-6;
-    particle p(pulse, grad, solout, yi, opt);
-    p.run();
-    
-    outfile.close();
+options parseUserInput(int argc, char *argv[], char** outputName){
+	//assume the first input is the file name
+	if(argc < 3){
+		std::cout<<"invalid input options"<<std::endl;
+		std::cout<<"Expects ./main parameterFile outputFile\n"<<std::endl;
+		exit(-1);
+	}
+	char *filename = argv[1];
+	options opt = optionParser(filename);
+	*outputName = argv[2];
+	return opt;
 }

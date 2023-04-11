@@ -1,177 +1,328 @@
 #include "../include/particle.h"
-
+#include <unistd.h>
 /*
 Outputs the sign of a number.
 */
 
+#if defined(__HIPCC__)
+#define __PREPROCD__ __device__
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+#define __PREPROCD__ __device__
+#else
+#include <random>
+#define __PREPROCD__
+#endif
+
+using namespace std;
+
 template <typename T>
-int particle::sgn(T val) {
-	return (T(0) < val) - (val < T(0));
+__PREPROCD__ double particle::sgn(T val) {
+	if(val<0)
+		return -1.0;
+	else
+		return 1.0;
+	//return (T(0) < val) - (val < T(0)); //we don't want the 0 case
 }
 
 /*
 Calculates the timestep based on the next wall or gas collision.
 */
 
-void particle::calc_next_collision_time() {
-	dx = sgn(v[0]) * Lx / 2 - pos[0];
-	dy = sgn(v[1]) * Ly / 2 - pos[1];
-	dz = sgn(v[2]) * Lz / 2 - pos[2];
-	dtx = dx / v[0];
-	dty = dy / v[1];
-	dtz = dz / v[2];
-	tbounce = std::min({ dtx, dty, dtz });
+#if defined(__HIPCC__)
+__PREPROCD__ double particle::uniform(){
+	return hiprand_uniform_double(&rngState);
+}
 
-	if (t + tbounce < next_gas_coll_time && t + tbounce < tf) {
+__PREPROCD__ double particle::normal01(){
+	return hiprand_normal_double(&rngState);
+}
+
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+__PREPROCD__ double particle::unif02pi(){
+    return hiprand_uniform_double(&rngState) * 2.0 * M_PI;
+}
+
+__PREPROCD__ double particle::exponential(const double tc){
+    return - tc * log(1.0 - hiprand_uniform_double(&rngState));
+}
+#elif defined(__NVCOMPILER) || defined(__NVCC__)
+__PREPROCD__ double particle::uniform(){
+	return curand_uniform_double(&rngState);
+}
+
+__PREPROCD__ double particle::normal01(){
+	return curand_normal_double(&rngState);
+}
+
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+__PREPROCD__ double particle::unif02pi(){
+    return curand_uniform_double(&rngState) * 2.0 * M_PI;
+}
+
+__PREPROCD__ double particle::exponential(const double tc){
+    return - tc * log(1.0 - curand_uniform_double(&rngState));
+}
+#else
+__PREPROCD__ double particle::uniform(){
+	return dist_uniform(gen64);
+}
+__PREPROCD__ double particle::normal01(){
+	return dist_normal(gen64);
+}
+
+__PREPROCD__ double particle::maxboltz(const double sqrtkT_m){
+    return normal01() * sqrtkT_m;
+}
+
+__PREPROCD__ double particle::unif02pi(){
+    return dist_uniform(gen64) * 2.0 * M_PI;
+}
+
+__PREPROCD__ double particle::exponential(const double tc){
+    return - tc * log(1.0 - dist_uniform(gen64));
+}
+#endif
+
+__PREPROCD__ void particle::calc_next_collision_time() {
+	if(gravity){
+		//calculate distance to collision point
+		dx = sgn(v.x) * L.x / 2.0 - pos.x;
+		dz = sgn(v.z) * L.z / 2.0 - pos.z;
+		
+		//time to wall for x and z coordinate
+		dtx = dx / v.x;
+		dtz = dz / v.z;
+		double y2 = v.y * v.y;
+		if(sgn(v.y) <= 0.0){ //if the particle has negative y velocity
+				dy = pos.y + L.y*0.5;
+				double sqr = sqrt(-2.0*G_CONST*dy+y2);
+				double temp1 = -(sqr+v.y)/G_CONST;
+				double temp2 = (sqr-v.y)/G_CONST;
+				//printf("temp1 = %f, temp2 = %f\n", temp1, temp2);
+				dty = min(std::abs(temp1), std::abs(temp2));
+		}
+		else{
+				double maxHeight = -0.5 * y2/G_CONST + pos.y;
+				if(maxHeight < 0.5 * L.y){ //in this case it can't hit the ceiling
+						dy = pos.y+L.y*0.5;
+						double sqr = sqrt(-2.0*G_CONST*dy+y2);
+						double temp1 = -(sqr+v.y)/G_CONST;
+						double temp2 = (sqr-v.y)/G_CONST;
+						dty = max(temp1, temp2);
+				}
+				else{
+						dy = L.y*0.5 - pos.y; //how far to ceiling
+						double sqr = sqrt(-2.0*G_CONST*dy+y2);
+						double temp1 = -(sqr+v.y)/G_CONST;
+						double temp2 = (sqr-v.y)/G_CONST;
+						dty = min(std::abs(temp1), std::abs(temp2));
+				}
+		}
+		if (dtx < 1e-16 || std::isnan(dtx))
+			dtx = 1e6;
+		else if (dty < 1e-16 || std::isnan(dty))
+			dty = 1e6;
+		else if (dtz < 1e-16 || std::isnan(dtz))
+			dtz = 1e6;
+		//printf("pos = %f, %f, %f, vel = %f %f %f, dt = %f %f %f\n", pos.x, pos.y, pos.z, v.x, v.y, v.z, dtx, dty, dtz);
+	}
+	else{
+		
+		dx = sgn(v.x) * L.x / 2.0 - pos.x;
+		dy = sgn(v.y) * L.y / 2.0 - pos.y;
+		dz = sgn(v.z) * L.z / 2.0 - pos.z;
+		
+		dtx = dx / v.x;
+		dty = dy / v.y;
+		dtz = dz / v.z;
+
+		if (dtx < 1e-16)
+			dtx = 1e6;
+		else if (dty < 1e-16)
+			dty = 1e6;
+		else if (dtz < 1e-16)
+			dtz = 1e6;
+	}
+	int min_elm;
+	if(dtx <= dty && dtx <= dtz){
+		tbounce = dtx;
+		min_elm = 0;
+	}
+	else if(dty <= dtx && dty <= dtz){
+		tbounce = dty;
+		min_elm = 1;
+	}
+	else if(dtz <= dtx && dtz <= dty){
+		tbounce = dtz;
+		min_elm = 2;
+	}
+	double timeToNextGas = next_gas_coll_time - t;
+	//printf("t=%f v: %f %f %f, p = %f %f %f, tBounce = %f, minT = %f\n", t, v.x, v.y, v.z, pos.x, pos.y, pos.z, tbounce, max_step);
+	if(max_step <= timeToNextGas && max_step <= tbounce && t + max_step < tf){ //check if the max step size is smaller than the next collision times
+		//if so then just say we don't collide and keep going
+		dt = max_step;
+		coll_type = 'N';
+	}
+	else if(tbounce < timeToNextGas && t + tbounce < tf){ //is a wall bounce next
 		dt = tbounce;
 		n_bounce += 1;
 		coll_type = 'W';
-		if (tbounce == dtx)
+		if (min_elm == 0)
 			wall_hit = 'x';
-		else if (tbounce == dty)
+		else if (min_elm == 1)
 			wall_hit = 'y';
-		else if (tbounce == dtz)
+		else if (min_elm == 2)
 			wall_hit = 'z';
 	}
-	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) {
+	else if (t + tbounce > next_gas_coll_time && next_gas_coll_time < tf) { //is a gas collision next?
 		dt = next_gas_coll_time - t;
-		next_gas_coll_time += gen_coll_time(gen);
+		next_gas_coll_time += exponential(tc);
 		coll_type = 'G';
 		n_coll += 1;
 	}
-	else {
+	else { //in this case it reached the end of the simulation
+		//printf("huh?");
+		coll_type = 'N';
 		dt = tf - t;
 		finished = true;
 	}
-
-	//if (dt < 0) {
-	//	bad = true;
-	//	finished = true;
-	//	printf("%f", dt);
-	//}
 }
 
 /*
 Calculates the new velocities after a wall or gas collision.
 */
 
-void particle::new_velocities() {
-
+__PREPROCD__ void particle::new_velocities() {
 	v_old = v;
-
-	if (coll_type == 'W' && diffuse == false) {
+	Vel = len(v);
+	//printf("%c\n", coll_type);
+	if (coll_type == 'N'){
+		//in this case we don't have a wall collision and it's just iterating through space still
+		//don't update the velocities they're fine
+	}
+	else if (coll_type == 'W' && diffuse == false) {
 		if (wall_hit == 'x')
-			v[0] *= -1;
+			v.x *= -1.0;
 		else if (wall_hit == 'y')
-			v[1] *= -1;
+			v.y *= -1.0;
 		else if (wall_hit == 'z')
-			v[2] *= -1;
+			v.z *= -1.0;
 	}
 	else if (coll_type == 'W' && diffuse == true) {
-
 		//V = sqrt(vx * vx + vy * vy + vz * vz);
-		phi = acos(cbrt(1 - uni_0_1(gen)));
-		theta = uni_0_2pi(gen);
-
+		phi = acos(cbrt(1.0 - uniform()));
+		theta = unif02pi();
 		if (wall_hit == 'x') {
-			v[0] = -1 * sgn(v[0]) * Vel * cos(phi);
-			v[1] = -Vel * sin(phi) * cos(theta);
-			v[2] = Vel * sin(phi) * sin(theta);
+			v.x = -1 * sgn(v.x) * Vel * cos(phi);
+			v.y = -Vel * sin(phi) * cos(theta);
+			v.z = Vel * sin(phi) * sin(theta);
 		}
 		else if (wall_hit == 'y') {
-			v[0] = Vel * sin(phi) * cos(theta);
-			v[1] = -1 * sgn(v[2]) * Vel * cos(phi);
-			v[2] = Vel * sin(phi) * sin(theta);
+			v.x = Vel * sin(phi) * cos(theta);
+			v.y = -1 * sgn(v.y) * Vel * cos(phi);
+			v.z = Vel * sin(phi) * sin(theta);
 		}
 		else if (wall_hit == 'z') {
-			v[0] = Vel * sin(phi) * cos(theta);
-			v[1] = Vel * sin(phi) * sin(theta);
-			v[2] = -1 * sgn(v[2]) * Vel * cos(phi);
+			v.x = Vel * sin(phi) * cos(theta);
+			v.y = Vel * sin(phi) * sin(theta);
+			v.z = -1 * sgn(v.z) * Vel * cos(phi);
 		}
 	}
 	else if (coll_type == 'G' && dist == 'M') {
-		v[0] = gen_max_boltz(gen);
-		v[1] = gen_max_boltz(gen);
-		v[2] = gen_max_boltz(gen);
-
-		Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+		v.x = maxboltz(sqrtKT_m);
+		v.y = maxboltz(sqrtKT_m);
+		v.z = maxboltz(sqrtKT_m);
+		Vel = len(v);
 	}
 	else if (coll_type == 'G' && dist == 'C') {
-		std::vector<double> vec(3);
-		for (int i = 0; i < 3; i++)
-			vec[i] = gen_norm(gen);
-		double vec_norm = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
-		v[0] = Vel * vec[0] / vec_norm;
-		v[1] = Vel * vec[1] / vec_norm;
-		v[2] = Vel * vec[2] / vec_norm;
-		Vel = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-
+		double3 vec;
+		vec.x = normal01();
+		vec.y = normal01();
+		vec.z = normal01();
+		double vec_norm = len(vec);
+		v = Vel * vec/vec_norm;
+		Vel = len(v);
 	}
 }
 
 /*
 Moves the particle based on the particle velocity and calcuated timestep.
 */
-
-void particle::move() {
-    // printf("%f\t %f\t %f\t %f\n", t, pos[0], pos[1], pos[2]);
-	t_old = t;
-	t += dt;
-	pos_old = pos;
-	pos[0] += v[0] * dt;
-	pos[1] += v[1] * dt;
-	pos[2] += v[2] * dt;
-
+__PREPROCD__ void particle::move() {
+	t_old = t; // update the time
+	t += dt; //increment forward
+	pos_old = pos; //update old position
+	v_old = v; //update old velocity
+	double3 a;
+	if(gravity)
+		a = (double3){0.0, G_CONST, 0.0}; //acceleration due to gravity
+	else
+		a = {0.0, 0.0, 0.0};
+	pos = pos_old +  v * dt + 0.5 *a*dt*dt; //update position
+	v = v + a * dt; //update velocity
+	
 }
 
 /*
 Performs one particle and spin integration step.
 */
 
-void particle::step() {
-
-	calc_next_collision_time();
-	move();
-	new_velocities();
-	integrate_step();
-
+__PREPROCD__ void particle::step() {
+	//printf("t = %f, tf = %f, dt = %f, v = %f %f %f, pos = %f %f %f\n", t, tf, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
+	//printf("determining collision time\n");
+	calc_next_collision_time(); //when do we hit something next?
+	//printf("moving forward\n");
+	move(); //move the particle forward that amount of time
+	//printf("%f %f %f %f\n", t, pos.x, pos.y, pos.z);
+	//printf("t = %f dt = %f, v = %f %f %f, pos = %f %f %f\n", t, dt, v.x, v.y, v.z, pos.x, pos.y, pos.z);
+	//printf("updating velocities\n");
+	new_velocities(); //update the velocity based on the collision type
+	//printf("h before = %lf, startTime = %lf, stopTime = %lf, lastOutput = %lf\n", h, t_old, t, lastOutput);
+	//printf("integrating with type %d\n", integrationType);
+	if(integrationType == 0){
+		//use the DOP853 algorithm for spin tracking
+		integrateDOP(t_old, t, S, pos_old, pos, v_old, v, opt);
+	}
+	else if(integrationType == 1){
+		//use the hybrid RK45 method
+		integrateRK45Hybrid(t_old, t, S, pos_old, pos, v_old, v, opt, h);
+	}
+	else{
+		//this is an unrecognized option so just don't integrate the spin in this case
+	}
+	//printf("h after = %lf, lastOutput = %lf\n", h, lastOutput);
 	n_steps += 1;
 }
 
 /*
-Convenience function that calls the step() function repeatedly until the end time is reached.
+Convenience function that calls the step() function repeatedL.y until the end time is reached.
 */
 
-void particle::run() {
+__PREPROCD__ outputDtype particle::getState(){
+	outputDtype out;
+	out.t = t;
+	out.x = pos;
+	out.s = S;
+	return out;
+}
+
+__PREPROCD__ void particle::updateTF(double tfNew){
+	dt = tfNew - tf;
+	tf = tfNew;
+	finished = false;
+	return;
+}
+
+__PREPROCD__ void particle::run(){
+	finished = false;
 	while (finished != true) {
+		//sleep(1);
 		step();
 	}
-}
-
-void particle::interpolate(const double ti, std::vector<double>& p_out, std::vector<double>& v_out){
-	p_out[0] = (pos_old[0]*(t - ti) + pos[0]*(ti - t_old))/(t-t_old);
-	p_out[1] = (pos_old[1]*(t - ti) + pos[1]*(ti - t_old))/(t-t_old);
-	p_out[2] = (pos_old[2]*(t - ti) + pos[2]*(ti - t_old))/(t-t_old);
-	// printf("%f\t %f\t %f\n", pos_old[0], pos[0], p_out[0]);
-	v_out = v_old;
-}
-
-void particle::integrate_step(){
-	integrator.integrate(t_old,t);
-}
-
-void particle::integrate_spin(){
-	integrator.integrate(t0,tf);
-}
-
-void particle::Bloch(const double x, const std::vector<double>& y, std::vector<double>& f){
-	interpolate(x,p_interp,v_interp);
-	Bx = pulse(x);
-	grad(p_interp,G);
-	Bx += G[0];
-	By += G[1];
-	Bz += G[2];
-    f[0] = gamma * (y[1]*Bz - y[2]*By);
-	f[1] = gamma * (y[2]*Bx - y[0]*Bz);
-	f[2] = gamma * (y[0]*By - y[1]*Bx);
 }
