@@ -110,7 +110,7 @@ __PREPROC__ double3 findCrossTerm(const double t, const double3 y, const double3
 	double3 p, v, G;
 	double3 B = pulse(t) + B0;
 	interpolate(t,t0,tf,p_old,p_new,v_old,v_new,p,v);
-	G = grad(p);
+	//G = grad(p);
 	B = pulse(t) + B0 + 1.0/c2*cross(v, E);
 	return gamma * B;
 }
@@ -181,20 +181,18 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
 		options OPT){
 
     double3 yy1, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10;
-    double3 rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8;
-    int arret, idid;
-    int iasti, iord, irtrn, reject, last, nonsti;
-    double facold, expo1, fac, facc1, facc2, fac11, posneg, xph;
-    double stnum, stden, err2, deno;
+    //double3 rcont1, rcont2, rcont3, rcont4, rcont5, rcont6, rcont7, rcont8;
+    //int arret, idid;
+    //int iasti, iord, irtrn, reject, last, nonsti;
+    int reject, last;
+	double facold, expo1, fac, facc1, facc2, fac11, posneg, xph;
+    double err2, deno;
 	double3 erri, sqr, sk;
     double atoli, rtoli, hlamb, err, hnew;
-	double3 ydiff, bspl;
     unsigned int nfcn = 0, nstep = 0, naccpt = 0, nrejct = 0;
-    double hout, xold, xout;
     double x = t0;
     double xf = tf;
     double h = OPT.h;
-    unsigned int i;
     int n = 3;
 
     facold = 1.0E-4;
@@ -208,18 +206,15 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
     rtoli = OPT.rtol;
     last  = 0;
     hlamb = 0.0;
-    iasti = 0;
 	////("k1 prior = %lf %lf %lf\n", k1.x, k1.y, k1.z);
     Bloch(x, y, k1, OPT.B0, OPT.E, OPT.gamma, t0, tf, p_old, p_new, v_old, v_new);
 	////("k1 post = %lf %lf %lf\n", k1.x, k1.y, k1.z);
 
     double hmax = std::abs(OPT.hmax);
-    iord = 8;
     // if (OPT.h == 0.0)
     //     h = hinit(fcn, x0, y, posneg, k1, k2, k3, iord, hmax, OPT.atol, OPT.rtol);
     nfcn += 2;
     reject = 0;
-    xold = x;
 	/*
     if (OPT.iout){
         irtrn = 1;
@@ -231,14 +226,10 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
     while (1){
 
         if (nstep > OPT.nmax){
-            xout = x;
-            hout = h;
             return -2;
         }
 
         if (0.1 * std::abs(h) <= std::abs(x) * OPT.uround){
-            xout = x;
-            hout = h;
             return -3;
         }
 
@@ -376,7 +367,6 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
 			*/
 			k1 = k4;
 			y = k5;
-			xold = x;
 			x = xph;
 			/*
 			if (OPT.iout == 1){
@@ -396,8 +386,6 @@ __PREPROC__ int integrateDOP(double t0, double tf, double3& y, const double3& p_
             // normal exit
             if (last)
             {
-                hout=hnew;
-                xout = x;
                 return 1;
             }
 
@@ -427,12 +415,10 @@ __PREPROC__ int integrateRK45Hybrid(double t0, double tf, double3& y, const doub
 		options OPT, double &h){
 	double x = t0;
 	double xf = tf;
-	bool out = false;
 	bool stop = false;
 	double hmin = 1.0E-9;
 	int nstep = 0;
 	double endOfSimulDt;
-	double nextOutputDt;
 	
 	double3 k1;
 	double3 k2;

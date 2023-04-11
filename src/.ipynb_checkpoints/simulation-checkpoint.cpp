@@ -1,15 +1,37 @@
 #include "../include/simulation.h"
 #include <unistd.h>
 
+#if defined(__NVCC__) || defined(__NVCOMPILER)
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+#elif defined(__HIPCC__)
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(hipError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != hipSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", hipGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+#endif
+
 outputBuffers createOutputBuffers(options opt){
 	outputBuffers buffers;
 	if(tolower(opt.output=='a') || tolower(opt.output=='n') || tolower(opt.output=='h')){
 		unsigned int numOutput = int(ceil(double(opt.tf - opt.t0)/opt.ioutInt));
 		buffers.particleStatesCPU = (outputDtype*)malloc(sizeof(outputDtype)*opt.numParticles);
 		#if defined(__HIPCC__)
-		hipMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles);
+		gpuErrchk(hipMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles));
 		#elif defined(__NVCC__) || defined(__NVCOMPILER)
-		cudaMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles);
+		gpuErrchk(cudaMalloc(&buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles));
 		#endif
 		if(tolower(opt.output) == 'a'){
 			//This means output the average and standard deviation of the particle data at the different output interval times
@@ -51,9 +73,9 @@ outputBuffers createOutputBuffers(options opt){
 
 void destroyOutputBuffers(outputBuffers buffers, options opt){
 	#if defined(__HIPCC__)
-	hipFree(buffers.particleStatesGPU);
+	gpuErrchk(hipFree(buffers.particleStatesGPU));
 	#elif defined(__NVCC__) || defined(__NVCOMPILER)
-	cudaFree(buffers.particleStatesGPU);
+	gpuErrchk(cudaFree(buffers.particleStatesGPU));
 	#endif
 	if(opt.output == 'A' || opt.output == 'a'){
 		free(buffers.times);
@@ -82,6 +104,7 @@ __global__ void initializeParticles(particle* particles, int numParticles, optio
 	if(tid < numParticles){
 		particles[tid] = particle(OPT.yi, OPT, seed, tid); //save the particle to the array
 		buffers.particleStatesGPU[tid] = particles[tid].getState(); //save the state of the particle for the CPU to handle the output
+		//printf("%d \n", tid);
 	}
 }
 
@@ -150,13 +173,13 @@ void handleOutput(FILE * f, particle* particles, options opt, outputBuffers buff
 	if(tolower(opt.output) == 'a'){
 		//in this case we need to move the data back to the CPU and then calculate the average and standard deviation
 		#if defined(__NVCOMPILER) || defined(__NVCC__)
-		cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost);
-		cudaDeviceSynchronize();
+		gpuErrchk(cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaDeviceSynchronize());
 		#elif defined(__HIPCC__)
-		hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost);
-		hipDeviceSynchronize();
+		gpuErrchk(hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost));
+		gpuErrchk(hipDeviceSynchronize());
 		#endif
-		
+		printf("time = %f\n", buffers.particleStatesCPU[0].t);
 		//first save the current time we are at
 		fwrite(&buffers.particleStatesCPU[0].t, sizeof(double), 1, f);
 		double average, std;
@@ -185,22 +208,22 @@ void handleOutput(FILE * f, particle* particles, options opt, outputBuffers buff
 	else if(tolower(opt.output) == 'n'){
 		//in this case we're doing the bulk output of all particle data
 		#if defined(__NVCOMPILER) || defined(__NVCC__)
-		cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost);
-		cudaDeviceSynchronize();
+		gpuErrchk(cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaDeviceSynchronize());
 		#elif defined(__HIPCC__)
-		hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost);
-		hipDeviceSynchronize();
+		gpuErrchk(hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost));
+		gpuErrchk(hipDeviceSynchronize());
 		#endif
 		fwrite(buffers.particleStatesCPU, sizeof(outputDtype) * opt.numParticles, 1, f);
 	}
 	else if(tolower(opt.output) == 'h'){
 		//in this case we're doing the histogramming of the data
 		#if defined(__NVCOMPILER) || defined(__NVCC__)
-		cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost);
-		cudaDeviceSynchronize();
+		gpuErrchk(cudaMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaDeviceSynchronize());
 		#elif defined(__HIPCC__)
-		hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost);
-		hipDeviceSynchronize();
+		gpuErrchk(hipMemcpy(buffers.particleStatesCPU, buffers.particleStatesGPU, sizeof(outputDtype)*opt.numParticles, hipMemcpyDeviceToHost));
+		gpuErrchk(hipDeviceSynchronize());
 		#endif
 		//write what time it currently is
 		fwrite(&buffers.particleStatesCPU[0].t, sizeof(double), 1, f);
@@ -249,8 +272,6 @@ void handleOutput(FILE * f, particle* particles, options opt, outputBuffers buff
 	}
 }
 
-
-
 //this functions does the actual analysis and integration
 void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int seed){
 	#if defined(__NVCOMPILER) || defined(__HIPCC__) || defined(__NVCC__)
@@ -268,29 +289,23 @@ void mainAnalysis(options opt, int totalTime, char* outputName, unsigned int see
 		
 		particle* particles;
 		#if defined(__NVCOMPILER) || defined(__NVCC__)
-		cudaMalloc(&particles, sizeof(particle) * opt.numParticles);
+		gpuErrchk(cudaMalloc(&particles, sizeof(particle) * opt.numParticles));
 		#elif defined(__HIPCC__)
-		hipMalloc(&particles, sizeof(particle) * opt.numParticles);
+		gpuErrchk(hipMalloc(&particles, sizeof(particle) * opt.numParticles));
 		#endif
-		
 		//create the output file
 		FILE* f = fopen(outputName, "wb");
 		fwrite(&opt, sizeof(options), 1, f);//write the options that were used to create the simulation
-		
 		//now initialize all of the particles in the system
 		initializeParticles<<<numBlocks, numPartsPerBlock>>>(particles, opt.numParticles, opt, buffers, seed);
 		handleOutput(f, particles, opt, buffers); //save the initial states
-		
 		unsigned int numIterations = int(floor(double(opt.tf - opt.t0)/opt.ioutInt));
-		
 		for(int i = 0; i < numIterations; i++){
 			double nextTime = ((double)i+1.0)*opt.ioutInt; //figure out the next stop time for the particles
-			
 			runSimulation<<<numBlocks, numPartsPerBlock>>>(particles, opt.numParticles, opt, buffers, nextTime);
 			handleOutput(f, particles, opt, buffers);
 		}
 		fclose(f);
-		
 		destroyOutputBuffers(buffers, opt);
 	}
 	#else

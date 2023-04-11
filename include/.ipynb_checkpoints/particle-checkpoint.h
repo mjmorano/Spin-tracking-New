@@ -158,7 +158,7 @@ private:
 	#if defined(__HIPCC__)
 	hiprandStateXORWOW_t rngState;
 	#elif defined(__NVCOMPILER) || defined(__NVCC__)
-	curandState rngState;
+	curandStateXORWOW_t rngState;
 	#else
 	//std::random_device dev;
 	std::mt19937_64 gen64;
